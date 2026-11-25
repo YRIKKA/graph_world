@@ -57,8 +57,8 @@ def checkpoint_paths(config, selected):
     training = GRPO / config["training_run"]
     base, revision = config["base_model"], config["base_revision"]
     model_dir = base.split("/")[-1]
-    snapshot = training / "cache/huggingface/hub" / ("models--" + base.replace("/", "--"))
-    snapshot = snapshot / "snapshots" / revision
+    cache = ROOT / config["base_cache"] if "base_cache" in config else training / "cache/huggingface/hub"
+    snapshot = (cache / ("models--" + base.replace("/", "--")) / "snapshots" / revision).resolve()
     for name in ("config.json", "processor_config.json", "model.safetensors"):
         if not (snapshot / name).is_file():
             raise ValueError(f"Missing local base checkpoint file: {snapshot / name}")

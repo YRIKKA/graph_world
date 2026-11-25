@@ -3,3 +3,4 @@
 *_results
 *runs
 *.png
+/models/

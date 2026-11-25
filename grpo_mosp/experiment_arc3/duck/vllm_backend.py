@@ -1,4 +1,4 @@
-"""Serve the existing NF4 checkpoint with vLLM and normalize its streamed replies."""
+"""Serve ARC-3 checkpoints with vLLM and normalize its streamed replies."""
 
 import asyncio
 import json as jsonlib
@@ -18,7 +18,7 @@ from ...experiment_downstream_tasks.serve_qwen import DEADLINE_ERROR, DEADLINE_H
 
 
 @contextmanager
-def serve_vllm(python, snapshot, name, log, *, context_limit, concurrent_jobs):
+def serve_vllm(python, snapshot, name, log, *, context_limit, concurrent_jobs, family="qwen", adapter=None):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
@@ -34,14 +34,21 @@ def serve_vllm(python, snapshot, name, log, *, context_limit, concurrent_jobs):
         compiler = next(prefix.glob("lib/python*/site-packages/nvidia/cu*/bin/nvcc"), None)
         if compiler is not None:
             env["CUDA_HOME"] = str(compiler.parent.parent)
+    inkling = family == "inkling"
+    served_base = "qwen-frozen" if adapter is not None else name
     command = [
         python, "-B", "-m", "vllm.entrypoints.cli.main", "serve", str(snapshot),
-        "--host", "127.0.0.1", "--port", str(port), "--served-model-name", name,
-        "--dtype", "bfloat16", "--quantization", "bitsandbytes", "--generation-config", "vllm",
+        "--host", "127.0.0.1", "--port", str(port), "--served-model-name", served_base,
+        "--dtype", "bfloat16", "--generation-config", "vllm",
         "--max-model-len", str(context_limit), "--max-num-seqs", str(concurrent_jobs),
-        "--no-enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser", "qwen3_coder",
-        "--reasoning-parser", "qwen3",
+        "--no-enable-prefix-caching", "--enable-auto-tool-choice",
+        "--tool-call-parser", "inkling" if inkling else "qwen3_coder",
+        "--reasoning-parser", "inkling" if inkling else "qwen3",
     ]
+    if not inkling:
+        command.extend(["--quantization", "bitsandbytes"])
+    if adapter is not None:
+        command.extend(["--enable-lora", "--lora-modules", f"{name}={adapter}"])
     with ExitStack() as stack, log.open("w", encoding="utf-8") as stream:
         if not env.get("VLLM_RPC_BASE_PATH"):
             # vLLM appends a UUID to this path for each Unix socket.

@@ -76,6 +76,17 @@ class LevelSession(_HarnessGameSession):
         if self.game.current_state.levels_completed > completed:
             self.level_started_at = time.monotonic()
             self.level_has_moves = False
+            run = self.game.game_run
+            baselines = run.base_actions_per_level
+            human_actions = baselines[completed] if baselines else "unavailable"
+            partial_rhae = f"{run._compute_final_score():.2f}%" if baselines else "unavailable"
+            message = (
+                f"{self.solver.label} · {run.game_id} · pass {self.pass_index + 1} · "
+                f"cleared level {completed + 1}/{run.number_of_levels} · "
+                f"Tufa actions {run.actions_per_level[completed]} (human {human_actions}) · "
+                f"partial RHAE {partial_rhae}"
+            )
+            print(message, flush=True)
         else:
             self.level_has_moves = action.id != GameAction.RESET
         return payload

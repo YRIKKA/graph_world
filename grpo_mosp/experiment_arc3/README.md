@@ -43,12 +43,11 @@ harness directories. Omit `--n-tasks` for a full-catalog paired evaluation.
 ## Policy comparison with the official Tufa runner
 
 `evaluate_arc3_duck.py` uses Tufa's inline runner, game sessions, resets, and
-scoring. With `--harness none` (the default), Qwen sees the current grid
+scoring. With `--harness none` (the default), the model sees the current grid
 and the last 16 action records and returns one JSON action per reply.
 `--harness duck` uses Tufa's Python tool policy and its native history
 management, with the same Linux worker restrictions described above.
-The default serves the local frozen NF4 checkpoint with Transformers
-and BitsAndBytes in `grpo`.
+The default serves frozen Qwen with vLLM and BitsAndBytes.
 
 ```bash
 conda activate grpo
@@ -65,53 +64,58 @@ python -m grpo_mosp.experiment_arc3.evaluate_arc3_duck \
   --harness none duck --deadline --reasoning-effort low medium
 ```
 
-The runner evaluates every combination of the selected models, backends,
-policies, and reasoning efforts on the same games. Each condition starts fresh games
-and runs its own preflight with `--deadline`. The combined table goes to
-`summary.csv` and `log.txt`. Separate native reports are nested by model,
-backend, policy, or effort when the corresponding list has multiple entries.
+The runner evaluates every combination of the selected models, policies, and
+reasoning efforts on the same games. Each condition starts fresh games and runs
+its own preflight with `--deadline`. The combined table goes to `summary.csv`
+and `log.txt`. Separate native reports are nested by model, policy, or effort
+when the corresponding list has multiple entries.
 
-Compare the two serving backends with Duck on one GPU:
+Compare frozen Qwen, fine-tuned Qwen (the `valid` objective), and frozen Inkling
+on the same game:
 
 ```bash
 ./grpo_mosp/experiment_arc3/run_evaluate_arc3_duck.sh \
-  --online --game su15 --model base --harness duck --reasoning-effort medium \
-  --backend transformers vllm --deadline --n-passes 1 --concurrent-jobs 1
+  --online --game su15 --harness duck --reasoning-effort medium \
+  --model qwen-frozen qwen-valid inkling-mini \
+  --deadline --n-passes 1 --concurrent-jobs 1
 ```
 
-The launcher runs the evaluator in `grpo`. The evaluator starts the
-Transformers server with `--model-python` (default `grpo/bin/python`)
-and vLLM with `--vllm-python` (default `vllm/bin/python`). It stops one
-server before starting the next and uses the same cached weights for
-both. The local `vllm` environment uses vLLM 0.33.0, PyTorch 2.14.0,
-and the BitsAndBytes plugin 0.0.3. The vLLM adapter keeps prefix caching and speculative decoding
-disabled, normalizes streamed reasoning and tools for Duck, and closes
-the stream when the request deadline expires. In paired runs, server
-logs and native diagnostics are under each backend's directory. The launcher
-gives each vLLM server a short, private socket directory under `/tmp` and
-removes it on shutdown. Set `VLLM_RPC_BASE_PATH` to use a short, writable
-directory that you manage.
+The launcher runs the evaluator in `grpo` and loads one model at a time.
+Serving uses vLLM. The optional `--backend vllm` flag is accepted.
+The launcher selects vLLM's PyTorch sampler to avoid a CUDA toolkit mismatch
+in the local Qwen environment. Each server writes `model_server.log` in its
+model directory. The launcher gives each server a short, private socket
+directory under `/tmp` and removes it on shutdown. Set `VLLM_RPC_BASE_PATH`
+to use a short, writable directory that you manage.
 
-`--model base` selects the existing frozen Qwen 4-bit checkpoint and is the
-default. To add another cached checkpoint, use
-`--model base other=/absolute/path/to/snapshot`. For reusable names, add
-an alias-to-path mapping under `base_models` in
-[models.yaml](../experiment_downstream_tasks/models.yaml) and pass those
-aliases to `--model`. Paths in that mapping can be relative to the file. Use local
-multimodal checkpoints compatible with the nested NF4 server and Qwen's
-chat template. The runner loads one model at a time.
+- `qwen-frozen` (default) uses the NF4 checkpoint moved to `models/qwen-frozen`.
+- `qwen-CONDITION` loads a saved LoRA adapter on that checkpoint. The eight
+  condition names are in [models.yaml](../experiment_downstream_tasks/models.yaml).
+- `inkling-mini` uses the official NVFP4 checkpoint in `models/inkling-mini`.
+  This host uses a separate vLLM build with the
+  [Ada support patch](https://github.com/vllm-project/vllm/pull/69165), pinned
+  to commit `186cf6c33ffc0b1b008ab3b1b4943c8bb661cc82`.
+  Override its Python with `--inkling-vllm-python`. The local default is
+  `models/.vllm-inkling/bin/python`. Qwen uses `--vllm-python`, which defaults
+  to `~/miniconda/envs/vllm/bin/python`.
+- `ALIAS=/absolute/path` selects a compatible frozen snapshot or a Qwen
+  adapter with matching checkpoint metadata. For reusable snapshot aliases, add
+  `base_models` entries to [models.yaml](../experiment_downstream_tasks/models.yaml).
+  Paths in that mapping can be relative to the file.
+
+The manifest records the resolved model and adapter paths and their vLLM
+executable. Both models use a shared context cap and send reasoning effort
+through their respective native templates.
 
 The defaults use Tufa's 25 versioned public games, 20 passes per game, and
 32 workers. This evaluator uses a two-hour limit per level attempt and a 240-second
 inference request timeout. The runner uses a 32,768-token context, enables thinking, and
 samples with temperature 0.6, top-p 0.95, and top-k 20. Completions can
 use the remaining context. `--reasoning-effort` accepts `low`, `medium`,
-and `xhigh`, with `easy` accepted as an alias for `low`. It sets Qwen's
+and `xhigh`, with `easy` accepted as an alias for `low`. It sets the model's
 native reasoning effort for gameplay and the optional preflight.
-The default is `medium`. Use `xhigh` to restore the checkpoint's implicit
+The default is `medium`. Use `xhigh` to restore Qwen's implicit
 effort from earlier runs. Effort is recorded in the run manifest.
-The Transformers server generates one response at a time, so a request
-can time out while waiting behind other workers.
 
 Use the same offline game bundle as Tufa for matching environment
 conditions. For the hosted ARC API, pass `--online`. This mode reads
@@ -123,7 +127,7 @@ A smaller hosted pilot is
 The runner writes native reports and the pinned configuration manifest to
 `runs/<timestamp>/`.
 
-Select explicit games with `--game ar25 su15 wa30`. Before loading Qwen,
+Select explicit games with `--game ar25 su15 wa30`. Before loading a model,
 the runner checks that the selected games open. An unavailable game is
 replaced by a seeded random draw from the unselected games of the
 eligible difficulties. The runner warns and omits the game when no
@@ -138,8 +142,8 @@ submitting it. Results go to `preflight/<game-id>/preflight.json` and
 `log.txt`. A failed preflight skips that game for the condition and the
 runner continues with the remaining games.
 
-In deadline mode the local server has at most 230 seconds for queueing
-and generation together and checks for expiry at token boundaries.
+In deadline mode the client allows at most 230 seconds for queueing and
+generation together and closes the vLLM stream at the deadline.
 Override the three budgets in seconds with `--generation-timeout`,
 `--request-timeout`, and `--game-timeout`. Keep the server deadline shorter
 than the client timeout when using `--deadline`. A transport failure gets one
@@ -155,7 +159,9 @@ The console and `log.txt` show a formatted line for each finished game
 pass and the same summary table as the other ARC evaluator. The run also
 writes the aggregate statistics to `summary.csv`. The table uses the mean
 Tufa RHAE across scored passes. Accepted moves exclude recovery resets.
-The log records each level retry and the summary reports their total.
+At each level clear, `log.txt` records the game, pass, level, Tufa action
+count, human baseline, and cumulative partial RHAE. The log also records
+each level retry and the summary reports their total.
 Gameplay timing begins when the live game opens, and the reported
 variances are population variances.
 

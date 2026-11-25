@@ -1,5 +1,6 @@
 {
   "training_run": "full_runs/moo_rewards_run_20261113140643",
+  "base_cache": "../../models/qwen-frozen",
   "base_model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
   "base_revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
   "seed": 101,

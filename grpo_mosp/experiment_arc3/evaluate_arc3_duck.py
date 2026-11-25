@@ -1,4 +1,4 @@
-"""Run Tufa's ARC-AGI-3 benchmark with frozen Qwen and selectable policies."""
+"""Run Tufa's ARC-AGI-3 benchmark with local vLLM models and selectable policies."""
 
 import argparse
 import asyncio
@@ -25,7 +25,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     __package__ = "grpo_mosp.experiment_arc3"
 
-from ..experiment_downstream_tasks.checkpoints import MODEL_CONFIG, load_selection, read_json, serve_checkpoint
+from ..experiment_downstream_tasks.checkpoints import MODEL_CONFIG, checkpoint_paths, read_json
 from ..experiment_downstream_tasks.serve_qwen import DEADLINE_HEADER, REASONING_EFFORTS
 from ..run_artifacts import artifact_environment, console_log
 from .duck.adapter import load_duck
@@ -47,6 +47,8 @@ REQUEST_TIMEOUT = 240
 GAME_TIMEOUT = 2 * 60 * 60
 PREFLIGHT_TIMEOUT = 600
 DEFAULT_REASONING_EFFORT = "medium"
+INKLING_MODEL = "thinkingmachines/Inkling-2-Mini"
+INKLING_REVISION = "c9d028302cd0f035fdf8e7e91f089a4ce94d2195"
 
 
 @dataclass(frozen=True)
@@ -54,7 +56,8 @@ class Condition:
     model: str
     harness: str
     reasoning_effort: str
-    backend: str = "transformers"
+    family: str = "qwen"
+    backend = "vllm"
 
 
 class InferenceFailure(RuntimeError):
@@ -90,9 +93,10 @@ class ModelClient:
 
     def __init__(self, endpoint, config, *, deadline=False, max_output_tokens=None,
                  reasoning_effort=DEFAULT_REASONING_EFFORT, generation_timeout=GENERATION_TIMEOUT,
-                 request_timeout=REQUEST_TIMEOUT, model="base", post=None):
+                 request_timeout=REQUEST_TIMEOUT, model="qwen-frozen", family="qwen", post=vllm_post):
         self.url = endpoint + "/chat/completions"
         self.model = model
+        self.family = family
         self.post = post
         self.config = config
         self.deadline = deadline
@@ -111,10 +115,14 @@ class ModelClient:
         payload = build_chat_payload(
             provider=self.config["shared"]["provider"], model=self.model, messages=messages,
             max_tokens=self.max_output_tokens or settings["max_output"] or None, temperature=settings["temperature"],
-            top_p=settings["top_p"], top_k=settings["top_k"], thinking=settings["thinking"],
+            top_p=settings["top_p"], top_k=settings["top_k"],
+            thinking=settings["thinking"] if self.family == "qwen" else None,
             tools=tools, tool_choice=tool_choice,
         )
-        payload["chat_template_kwargs"].update(self.config["server"]["default_chat_template_kwargs"])
+        if self.family == "qwen":
+            payload["chat_template_kwargs"].update(self.config["server"]["default_chat_template_kwargs"])
+        else:
+            payload.pop("chat_template_kwargs", None)
         payload["reasoning_effort"] = self.reasoning_effort
         return payload
 
@@ -138,9 +146,8 @@ class ModelClient:
             transport_error = None
             self.model_calls += 1
             try:
-                post = self.post or requests.post
-                response = post(self.url, json=payload, timeout=timeout,
-                                headers={DEADLINE_HEADER: str(deadline)})
+                response = self.post(self.url, json=payload, timeout=timeout,
+                                     headers={DEADLINE_HEADER: str(deadline)})
                 reason = "invalid_response"
                 reply = response.json()
                 tokens = reply.get("usage", {}).get("completion_tokens", 0)
@@ -185,16 +192,13 @@ class ModelClient:
         return self.legacy_completion(payload, timeout)
 
     def legacy_completion(self, payload, request_timeout_seconds):
-        import requests
-
         timeout = self.request_timeout
         if request_timeout_seconds is not None:
             timeout = min(timeout, request_timeout_seconds)
         self.model_calls += 1
         started = time.monotonic()
         try:
-            post = self.post or requests.post
-            response = post(self.url, json=payload, timeout=timeout)
+            response = self.post(self.url, json=payload, timeout=timeout)
             if response.status_code in {429, 502, 503, 504}:
                 response.raise_for_status()
         finally:
@@ -407,8 +411,7 @@ def policy_analyzer(args, config, endpoint, condition, *, record=None):
     client_type = DirectAnalyzer if condition.harness == "none" else ModelClient
     client = client_type(endpoint, config, deadline=args.deadline, max_output_tokens=args.max_output_tokens,
                          reasoning_effort=condition.reasoning_effort, generation_timeout=args.generation_timeout,
-                         request_timeout=args.request_timeout, model=condition.model,
-                         post=vllm_post if condition.backend == "vllm" else None)
+                         request_timeout=args.request_timeout, model=condition.model, family=condition.family)
     if condition.harness == "none":
         return client
     from .duck.native_policy import NativeDuckAnalyzer
@@ -531,9 +534,7 @@ def run_benchmark(config, args, games, run_dir, endpoint, condition):
     arcade = make_arcade_spec(args, run_dir)
     environment = config["environment"]
     policy = "direct" if condition.harness == "none" else "duck"
-    label = f"qwen-{condition.model}-{policy}-{condition.reasoning_effort}"
-    if condition.backend != "transformers":
-        label += f"-{condition.backend}"
+    label = f"{condition.model}-{policy}-{condition.reasoning_effort}-{condition.backend}"
     solver = LevelBudgetSolver(
         label=label, model=condition.model,
         analyzer_timeout=args.request_timeout,
@@ -615,50 +616,81 @@ def print_cli_options(args, *, file):
     print("\n".join(lines), file=file, flush=True)
 
 
-def resolve_base_models(specs):
-    configured = read_json(MODEL_CONFIG).get("base_models", {})
+def local_checkpoint_family(snapshot):
+    config = read_json(snapshot / "config.json")
+    quantization = config.get("quantization_config") or {}
+    if not config.get("vision_config"):
+        raise ValueError(f"Missing vision configuration in {snapshot}")
+    if config.get("model_type") == "inkling2_loop" and quantization.get("quant_algo") == "NVFP4":
+        family = "inkling"
+    elif (quantization.get("bnb_4bit_quant_type") == "nf4"
+          and quantization.get("bnb_4bit_use_double_quant")
+          and (quantization.get("load_in_4bit") or quantization.get("_load_in_4bit"))):
+        family = "qwen"
+    else:
+        raise ValueError(f"Expected Inkling NVFP4 or nested Qwen NF4 weights in {snapshot}")
+    index = snapshot / "model.safetensors.index.json"
+    shards = set(read_json(index)["weight_map"].values()) if index.is_file() else {"model.safetensors"}
+    for name in sorted(shards | {"processor_config.json", "tokenizer.json"}):
+        if not (snapshot / name).is_file():
+            raise ValueError(f"Missing local checkpoint file: {snapshot / name}")
+    return family
+
+
+def resolve_models(specs):
+    config = read_json(MODEL_CONFIG)
+    qwen_conditions = {"qwen-frozen": "base",
+                       **{f"qwen-{name}": name for name in config["conditions"]}}
+    canonical = {"base": "qwen-frozen", "inkling": "inkling-mini"}
+    configured = config.get("base_models", {})
+    available = (*qwen_conditions, "inkling-mini", *configured)
     models = {}
     for spec in specs:
         alias, separator, location = spec.partition("=")
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,79}", alias):
-            raise ValueError(f"Invalid base model alias {alias!r}")
-        if alias == "base":
-            if separator:
-                raise ValueError("'base' is reserved for the existing frozen Qwen checkpoint")
-            config, snapshot, _ = load_selection(SimpleNamespace(model=["base"]))
-            details = {"model": config["base_model"], "model_revision": config["base_revision"]}
+        alias = canonical.get(alias, alias)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_+.-]{0,119}", alias):
+            raise ValueError(f"Invalid model alias {alias!r}")
+        if separator and (not location or alias in available):
+            raise ValueError(f"Use a unique ALIAS=PATH for a custom checkpoint: {spec!r}")
+        condition = qwen_conditions.get(alias)
+        adapter = None
+        if condition:
+            snapshot, adapters = checkpoint_paths(config, {condition: None})
+            adapter = adapters[condition]
+        elif alias == "inkling-mini":
+            snapshot = REPO / "models/inkling-mini"
         else:
             if not separator:
                 location = configured.get(alias)
             if not location:
-                raise ValueError(f"Unknown base model {alias!r}. Use {alias}=/path/to/local/snapshot "
-                                 f"or configure the alias in {MODEL_CONFIG}")
-            base_dir = Path.cwd() if separator else MODEL_CONFIG.parent
-            snapshot = (base_dir / Path(location).expanduser()).resolve()
-            model_config = read_json(snapshot / "config.json")
-            quantization = model_config.get("quantization_config") or {}
-            if (not model_config.get("vision_config") or quantization.get("bnb_4bit_quant_type") != "nf4"
-                    or not quantization.get("bnb_4bit_use_double_quant")
-                    or not (quantization.get("load_in_4bit") or quantization.get("_load_in_4bit"))):
-                raise ValueError(f"{alias!r} must point to a multimodal checkpoint with nested NF4 weights")
-            if not any((snapshot / name).is_file() for name in (
-                "model.safetensors", "model.safetensors.index.json",
-            )):
-                raise ValueError(f"No local safetensors weights found in {snapshot}")
-            details = {"model": alias, "model_revision": snapshot.name if snapshot.parent.name == "snapshots" else None}
-        details["snapshot"] = str(snapshot)
+                raise ValueError(f"Unknown model {alias!r}. Choose from {', '.join(available)}, or use ALIAS=PATH.")
+            root = Path.cwd() if separator else MODEL_CONFIG.parent
+            snapshot = (root / Path(location).expanduser()).resolve()
+            if (snapshot / "adapter_config.json").is_file():
+                snapshot, adapters = checkpoint_paths(config, {alias: snapshot})
+                adapter = adapters[alias]
+        if condition or adapter:
+            family, model, revision = "qwen", config["base_model"], config["base_revision"]
+        else:
+            family = local_checkpoint_family(snapshot)
+            model, revision = alias, snapshot.name if snapshot.parent.name == "snapshots" else None
+            if alias == "inkling-mini":
+                if family != "inkling":
+                    raise ValueError(f"Expected Inkling 2 Mini in {snapshot}")
+                model, revision = INKLING_MODEL, INKLING_REVISION
+        details = {"model": model, "model_revision": revision, "family": family, "snapshot": str(snapshot),
+                   "adapter": str(adapter) if adapter else None}
         if alias in models and models[alias] != details:
-            raise ValueError(f"Conflicting checkpoints for base model alias {alias!r}")
+            raise ValueError(f"Conflicting checkpoints for model alias {alias!r}")
         models[alias] = details
     return models
 
 
 def main():
-    grpo_python = Path.home() / "miniconda/envs/grpo/bin/python"
     vllm_python = Path.home() / "miniconda/envs/vllm/bin/python"
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", action="append", nargs="+", choices=("transformers", "vllm"),
-                        help="Serving backends to compare (default: transformers).")
+    parser.add_argument("--backend", choices=("vllm",), default="vllm",
+                        help="Serving backend (default: vllm).")
     parser.add_argument("--harness", action="append", nargs="+", choices=("none", "duck"),
                         help="Policies to run (default: none). Pass both as --harness none duck.")
     parser.add_argument("--game", action="extend", nargs="+", metavar="GAME",
@@ -672,7 +704,7 @@ def main():
     parser.add_argument("--n-passes", type=positive_int, help="Override Tufa's configured passes per game.")
     parser.add_argument("--concurrent-jobs", type=positive_int, help="Override Tufa's configured worker count.")
     parser.add_argument("--reasoning-effort", action="append", nargs="+", choices=(*REASONING_EFFORTS, "easy"),
-                        help=f"Qwen reasoning levels (default: {DEFAULT_REASONING_EFFORT}). 'easy' is an alias for 'low'.")
+                        help=f"Model reasoning levels (default: {DEFAULT_REASONING_EFFORT}). 'easy' is an alias for 'low'.")
     parser.add_argument("--deadline", action="store_true",
                         help="Require a preflight action and enforce the local generation deadline.")
     parser.add_argument("--generation-timeout", type=positive_int, default=GENERATION_TIMEOUT, metavar="SECONDS",
@@ -692,15 +724,20 @@ def main():
     source.add_argument("--online", action="store_true", help="Use the hosted ARC API instead of the offline bundle.")
     parser.add_argument("--env-file", type=Path, default=REPO / ".env", help="ARC_API_KEY fallback for hosted games.")
     parser.add_argument("--arc-base-url", default=os.environ.get("ARC_BASE_URL") or "https://arcprize.org")
-    parser.add_argument("--model", action="append", nargs="+", metavar="ALIAS[=SNAPSHOT]",
-                        help="Local frozen base models to compare (default: base). Use configured aliases or ALIAS=PATH.")
-    parser.add_argument("--model-python", default=str(grpo_python) if grpo_python.is_file() else sys.executable)
+    parser.add_argument("--model", action="append", nargs="+", metavar="ALIAS[=PATH]",
+                        help="Checkpoints to compare. Use qwen-frozen (default), qwen-CONDITION, "
+                             "inkling-mini, or ALIAS=PATH for a local snapshot or Qwen adapter.")
     parser.add_argument("--vllm-python", default=str(vllm_python),
-                        help="Python in the vllm Conda environment.")
+                        help="Python in the vLLM environment for Qwen.")
+    parser.add_argument("--inkling-vllm-python",
+                        help="Python for Inkling (default: models/.vllm-inkling/bin/python if installed, "
+                             "otherwise --vllm-python).")
     args = parser.parse_args()
-    for name, default in (("backend", ["transformers"]), ("harness", ["none"]),
-                          ("reasoning_effort", [DEFAULT_REASONING_EFFORT]),
-                          ("difficulty", None), ("model", ["base"])):
+    if args.inkling_vllm_python is None:
+        local_inkling = REPO / "models/.vllm-inkling/bin/python"
+        args.inkling_vllm_python = str(local_inkling) if local_inkling.is_file() else args.vllm_python
+    for name, default in (("harness", ["none"]), ("reasoning_effort", [DEFAULT_REASONING_EFFORT]),
+                          ("difficulty", None), ("model", ["qwen-frozen"])):
         groups = getattr(args, name)
         if groups and len(groups) != 1:
             parser.error(f"Pass --{name.replace('_', '-')} once followed by its list of values")
@@ -759,27 +796,26 @@ def main():
         parser.error("Unset OPERATION_MODE so this evaluator can select the requested ARC environment mode.")
 
     try:
-        models = resolve_base_models(args.model)
+        models = resolve_models(args.model)
     except (OSError, ValueError) as error:
         parser.error(str(error))
+    for details in models.values():
+        python = args.inkling_vllm_python if details["family"] == "inkling" else args.vllm_python
+        details["vllm_python"] = str(Path(python).expanduser())
     context = config["shared"]["context_window"]
     if args.max_output_tokens is not None and args.max_output_tokens > context:
         parser.error(f"--max-output-tokens must fit the {context}-token context")
     run_dir = new_run()
     model_dirs = {alias: run_dir / "models" / alias if len(models) > 1 else run_dir for alias in models}
-    backend_dirs = {
-        (alias, backend): path / backend if len(args.backend) > 1 else path
-        for alias, path in model_dirs.items() for backend in args.backend
-    }
     condition_dirs = {}
-    for alias, backend, harness, effort in product(models, args.backend, args.harness, args.reasoning_effort):
-        path = backend_dirs[alias, backend]
+    for alias, harness, effort in product(models, args.harness, args.reasoning_effort):
+        path = model_dirs[alias]
         if len(args.harness) > 1:
             path /= harness
         if len(args.reasoning_effort) > 1:
             path /= effort
         path.mkdir(parents=True, exist_ok=True)
-        condition_dirs[Condition(alias, harness, effort, backend)] = path
+        condition_dirs[Condition(alias, harness, effort, models[alias]["family"])] = path
     multiple_conditions = len(condition_dirs) > 1
     with artifact_environment(run_dir):
         print_cli_options(args, file=sys.stdout)
@@ -791,9 +827,7 @@ def main():
             "policy": "comparison" if multiple_conditions else {"none": "direct", "duck": "duck"}[args.harness[0]],
             "harnesses": args.harness, "models": models,
             **(next(iter(models.values())) if len(models) == 1 else {}),
-            "backend": (args.backend[0] + "-bitsandbytes") if len(args.backend) == 1 else "comparison",
-            "backends": {backend: {"python": args.vllm_python if backend == "vllm" else args.model_python}
-                         for backend in args.backend},
+            "backend": args.backend,
             "conditions": [
                 {"model": condition.model, "harness": condition.harness, "reasoning_effort": condition.reasoning_effort,
                  "backend": condition.backend,
@@ -823,39 +857,27 @@ def main():
         })
         print(f"Tufa runner · {len(games)} games × {args.n_passes} passes "
               f"× {len(condition_dirs)} conditions · {run_dir}", flush=True)
-        if args.concurrent_jobs > 1 and "transformers" in args.backend:
-            print("The local model server processes one generation at a time. Queued requests count toward timeout.")
-        server_args = [
-            "--context-limit", str(context), "--completion-limit", str(context),
-            "--default-completion-to-context",
-        ]
-        if args.deadline:
-            server_args.extend(["--generation-timeout", str(args.generation_timeout)])
-        if args.max_output_tokens is not None:
-            server_args.append("--fit-completion-to-context")
         from rich.console import Console
 
         summaries = []
-        for (alias, backend), model_dir in backend_dirs.items():
-            snapshot = Path(models[alias]["snapshot"])
-            log = model_dir / "model_server.log"
+        for alias, model_dir in model_dirs.items():
+            details = models[alias]
+            adapter = Path(details["adapter"]) if details["adapter"] else None
             with ExitStack() as stack:
                 startup_error = None
                 try:
-                    if backend == "vllm":
-                        server = serve_vllm(args.vllm_python, snapshot, alias, log, context_limit=context,
-                                            concurrent_jobs=args.concurrent_jobs)
-                    else:
-                        server = serve_checkpoint(args.model_python, snapshot, None, alias, log,
-                                                  model_dir / "server.ready", server_args=server_args)
-                    endpoint = stack.enter_context(server)
+                    endpoint = stack.enter_context(serve_vllm(
+                        details["vllm_python"], Path(details["snapshot"]), alias,
+                        model_dir / "model_server.log", context_limit=context,
+                        concurrent_jobs=args.concurrent_jobs, family=details["family"], adapter=adapter,
+                    ))
                 except Exception as error:
                     startup_error = str(error) or type(error).__name__
                 for condition, policy_dir in condition_dirs.items():
-                    if (condition.model, condition.backend) != (alias, backend):
+                    if condition.model != alias:
                         continue
                     with console_log(policy_dir / "log.txt") if multiple_conditions else nullcontext():
-                        print(f"Policy · {alias} [{condition.harness}, {condition.reasoning_effort}, {backend}] "
+                        print(f"Policy · {alias} [{condition.harness}, {condition.reasoning_effort}, {condition.backend}] "
                               f"· {policy_dir}", flush=True)
                         if startup_error is None:
                             summary = run_policy(args, config, games, policy_dir, endpoint, condition)
