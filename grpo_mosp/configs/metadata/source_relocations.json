@@ -1,0 +1,45 @@
+{
+  "eval_shaping.py": {
+    "path": "eval_shaping.py",
+    "new_sha256": "82ecaa9857a2be14c5da41b62e7d735506f61596ec9c7f824f86b7f89295b5d2",
+    "previous_sha256": [
+      "197a23ecb74c1bb956a9e3414b5db42b5e8f98be01864f0ab2d896e50e2f5d26",
+      "cb14045e29464b113d31016f44490b6e1128a7477bddec5a793ff06b5b6b17d8"
+    ]
+  },
+  "train.py": {
+    "path": "train.py",
+    "new_sha256": "da80ecd082993dbc8f4f7a7ed9ca994ef9513424f56ae0a1cf54e1bcb726230b",
+    "previous_sha256": [
+      "1f238c0f26b022e9531bfa0ade72a495dd674bd15cc085c74fe5ff57779c00e6"
+    ]
+  },
+  "moo_rewards.py": {
+    "path": "experiment_moo_rewards/moo_rewards.py",
+    "new_sha256": "3884cc7dc84efb76564a05b845907af5b96a4a594115f0e94d5e0ba5f769a128",
+    "previous_sha256": [
+      "fa5b8644e9c4fc2ca123f5d3d78dd3a55a3581f508c3306c707ecc283d3b3ada"
+    ]
+  },
+  "experiment_moo_rewards.py": {
+    "path": "experiment_moo_rewards/experiment_moo_rewards.py",
+    "new_sha256": "a990dad50790ae1a1dd428233883303540733608f0adc7dd004e932b744c3c30",
+    "previous_sha256": [
+      "ae69e02f76ee27c8bfaa560e12e5638cd73b732722c762567a2f0241e8c4910b"
+    ]
+  },
+  "eval_baselines.py": {
+    "path": "eval_baselines.py",
+    "previous_sha256": [
+      "c8bd646218c0cbb96e2ae91f9b78f5d16c633687ee7fb22e98b97ab7ab3ff092"
+    ],
+    "new_sha256": "21babd1a8d51ceaa7fbfc405d986414b33e889adf348b3a9f07e06fa3c7cb2e5"
+  },
+  "model_backends.py": {
+    "path": "model_backends.py",
+    "previous_sha256": [
+      "1bca0dc49da2e5de08043ff60ca13d90691d0fff46de65f04f1f15c6651a6c0a"
+    ],
+    "new_sha256": "011cd03d92ae5e50be1bc13254896145f81d5c872c2450e8f38257ae7450735d"
+  }
+}

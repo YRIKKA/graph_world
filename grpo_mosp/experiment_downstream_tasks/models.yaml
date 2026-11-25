@@ -1,0 +1,16 @@
+{
+  "training_run": "full_runs/moo_rewards_run_20261113140643",
+  "base_model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+  "base_revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+  "seed": 101,
+  "conditions": [
+    "valid",
+    "valid+hypervolume+igd__weighted",
+    "valid+hypervolume__weighted",
+    "valid+igd__weighted",
+    "valid_per_path",
+    "valid_per_path+hypervolume+igd__weighted",
+    "valid_per_path+hypervolume__weighted",
+    "valid_per_path+igd__weighted"
+  ]
+}

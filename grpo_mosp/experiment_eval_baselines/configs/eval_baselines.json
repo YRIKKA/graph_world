@@ -1,0 +1,218 @@
+{
+  "phase": "confirmatory",
+  "graphs": 200,
+  "repetitions": 5,
+  "relabelings": 1,
+  "training_run_count": 5,
+  "ks": [
+    1,
+    2,
+    3
+  ],
+  "budget_multipliers": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "difficulty_path_cutoff": 32,
+  "difficulty_weights": {
+    "easy": 0.5,
+    "hard": 0.5
+  },
+  "suite_seed": 2000000,
+  "evaluation_seed": 112358,
+  "bootstrap_seed": 271828,
+  "bootstrap_samples": 2000,
+  "context_limit": 32768,
+  "max_action_tokens": 512,
+  "max_task_tokens": 16384,
+  "temperature": 1.0,
+  "device": "cuda",
+  "initial_checkpoint": {
+    "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+    "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+    "loading": {
+      "backend": "unsloth_nf4",
+      "quantization": "nf4",
+      "double_quant": true,
+      "compute_dtype": "bfloat16",
+      "text_only": true,
+      "enable_thinking": false,
+      "fast_inference": false,
+      "offload_embedding": true,
+      "torch_compile": false
+    }
+  },
+  "pre_grpo_checkpoint": null,
+  "training_runs": [
+    {
+      "id": "grpo-101",
+      "post_checkpoint": {
+        "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+        "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+        "loading": {
+          "backend": "unsloth_nf4",
+          "quantization": "nf4",
+          "double_quant": true,
+          "compute_dtype": "bfloat16",
+          "text_only": true,
+          "enable_thinking": false,
+          "fast_inference": false,
+          "offload_embedding": true,
+          "torch_compile": false
+        },
+        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-101/adapter"
+      },
+      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-101/config.json",
+      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-101/training_compute.json",
+      "selection": {
+        "split": "validation",
+        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "criterion": "maximum mean validation S at B=8k",
+        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-101/validation_selection.json"
+      }
+    },
+    {
+      "id": "grpo-202",
+      "post_checkpoint": {
+        "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+        "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+        "loading": {
+          "backend": "unsloth_nf4",
+          "quantization": "nf4",
+          "double_quant": true,
+          "compute_dtype": "bfloat16",
+          "text_only": true,
+          "enable_thinking": false,
+          "fast_inference": false,
+          "offload_embedding": true,
+          "torch_compile": false
+        },
+        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-202/adapter"
+      },
+      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-202/config.json",
+      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-202/training_compute.json",
+      "selection": {
+        "split": "validation",
+        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "criterion": "maximum mean validation S at B=8k",
+        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-202/validation_selection.json"
+      }
+    },
+    {
+      "id": "grpo-303",
+      "post_checkpoint": {
+        "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+        "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+        "loading": {
+          "backend": "unsloth_nf4",
+          "quantization": "nf4",
+          "double_quant": true,
+          "compute_dtype": "bfloat16",
+          "text_only": true,
+          "enable_thinking": false,
+          "fast_inference": false,
+          "offload_embedding": true,
+          "torch_compile": false
+        },
+        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-303/adapter"
+      },
+      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-303/config.json",
+      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-303/training_compute.json",
+      "selection": {
+        "split": "validation",
+        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "criterion": "maximum mean validation S at B=8k",
+        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-303/validation_selection.json"
+      }
+    },
+    {
+      "id": "grpo-404",
+      "post_checkpoint": {
+        "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+        "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+        "loading": {
+          "backend": "unsloth_nf4",
+          "quantization": "nf4",
+          "double_quant": true,
+          "compute_dtype": "bfloat16",
+          "text_only": true,
+          "enable_thinking": false,
+          "fast_inference": false,
+          "offload_embedding": true,
+          "torch_compile": false
+        },
+        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-404/adapter"
+      },
+      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-404/config.json",
+      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-404/training_compute.json",
+      "selection": {
+        "split": "validation",
+        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "criterion": "maximum mean validation S at B=8k",
+        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-404/validation_selection.json"
+      }
+    },
+    {
+      "id": "grpo-505",
+      "post_checkpoint": {
+        "model": "unsloth/Qwen3.8-27B-unsloth-bnb-4bit",
+        "revision": "8aa5f05d26b7205477066e1449e0af13f762a299",
+        "loading": {
+          "backend": "unsloth_nf4",
+          "quantization": "nf4",
+          "double_quant": true,
+          "compute_dtype": "bfloat16",
+          "text_only": true,
+          "enable_thinking": false,
+          "fast_inference": false,
+          "offload_embedding": true,
+          "torch_compile": false
+        },
+        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-505/adapter"
+      },
+      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-505/config.json",
+      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-505/training_compute.json",
+      "selection": {
+        "split": "validation",
+        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "criterion": "maximum mean validation S at B=8k",
+        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-505/validation_selection.json"
+      }
+    }
+  ],
+  "excluded_datasets": [
+    "jm_test/graph_world/grpo_mosp/data/train.jsonl"
+  ],
+  "validation_dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+  "pilot_suite": "jm_test/graph_world/grpo_mosp/experiments/pilot/suite.jsonl",
+  "max_candidates_per_domain": 200000,
+  "save_histories": false,
+  "output": "jm_test/graph_world/grpo_mosp/experiments/before_after",
+  "pilot_graph_grid": [
+    20,
+    40,
+    80,
+    160
+  ],
+  "pilot_run_grid": [
+    3,
+    5,
+    10
+  ],
+  "pilot_target_halfwidth": 0.05,
+  "backend": "unsloth_nf4",
+  "compute_dtype": "bfloat16",
+  "offload_embedding": true,
+  "lora_rank": 8,
+  "lora_alpha": 16,
+  "lora_last_layers": 8,
+  "lora_mlp": false,
+  "min_free_gpu_gib": 24,
+  "max_gpu_memory_gib": 38,
+  "history_format": "state_actions",
+  "reasoning_effort": "xhigh",
+  "preserve_thinking": false
+}

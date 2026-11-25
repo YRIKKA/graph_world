@@ -1,0 +1,6 @@
+# Official CUDA 12 / Torch 2.10 / CPython 3.12 / Linux x86_64 wheel.
+# Install after the pinned requirements.txt Torch stack; no nvcc build required.
+causal-conv1d @ https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.7.0/causal_conv1d-1.7.0%2Bcu12torch2.10cxx11abiTRUE-cp312-cp312-linux_x86_64.whl#sha256=8e81f8c76435ad31aa41edc6c0c9d26de971a293b190183d2816da71547614d7 ; python_version == "3.12" and platform_machine == "x86_64" and sys_platform == "linux"
+
+# Declared by the upstream wheel even when no source compilation is needed.
+ninja==1.13.0

@@ -1,0 +1,4 @@
+{
+  "image_upscale": 4,
+  "max_model_calls_per_decision": 12
+}

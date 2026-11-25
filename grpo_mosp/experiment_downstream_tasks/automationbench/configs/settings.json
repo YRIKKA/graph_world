@@ -1,0 +1,7 @@
+{
+  "revision": "4a8e1061254004d9dac807054eed33fad7d1ff14",
+  "domains": "sales,marketing,operations,support,finance,hr",
+  "toolset": "api",
+  "max_steps": 50,
+  "max_concurrent": 1
+}

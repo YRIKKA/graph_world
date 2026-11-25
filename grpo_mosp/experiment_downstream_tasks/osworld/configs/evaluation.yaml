@@ -1,0 +1,14 @@
+{
+  "release": "osworld-v2.1",
+  "provider": "aws",
+  "region": "us-east-1",
+  "num_envs": 1,
+  "max_steps": 500,
+  "max_tokens": 1024,
+  "max_api_retries": 3,
+  "image_max": 4,
+  "history_n": 20,
+  "temperature": 0,
+  "screen_width": 1920,
+  "screen_height": 1080
+}

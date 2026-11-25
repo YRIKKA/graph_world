@@ -1,0 +1,20 @@
+-r requirements-cpu.txt
+# CUDA 12.8 stack compatible with Unsloth's Transformers <=5.17 requirement.
+torch==2.10.0
+torchvision==0.25.0
+xformers==0.0.34
+triton==3.6.0
+transformers==5.17.0
+tokenizers==0.23.3
+peft==0.21.2
+bitsandbytes==0.50.2
+accelerate==1.15.0
+unsloth==2026.11.1
+unsloth_zoo==2026.11.1
+trl==1.15.0
+huggingface-hub==1.32.0
+safetensors==0.8.0
+flash-linear-attention==0.6.0
+
+# Optimized Qwen linear-attention convolution for the pinned Linux CUDA stack.
+-r requirements-kernels.txt

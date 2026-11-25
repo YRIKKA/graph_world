@@ -1,0 +1,7 @@
+numpy==2.2.5
+networkx==3.4.2
+pytest==8.3.5
+matplotlib==3.10.1
+moocore==0.3.2
+pymoo==0.6.2
+paretoset==1.2.5

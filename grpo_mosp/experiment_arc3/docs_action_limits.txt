@@ -1,0 +1,81 @@
+ARC-AGI-3 action limits
+
+The evaluator uses the ARC SDK's baseline_actions array for each selected
+versioned game. These are the official human baseline counts in level order.
+The processed CSV exposes the same counts for the public demo games as a JSON
+array in its human_actions column. The source snapshot in
+metadata/arc3_human_action_baselines.json is keyed by full game version.
+To regenerate the CSV, run process_arc3_human_data.py and redirect its output
+to arc3_human_data_processed.csv. Runtime limits always use the selected game
+version's SDK metadata, including when using a local bundle.
+
+Each level permits five times its human action baseline, following section 4.3
+of the ARC-AGI-3 technical report. For example, a 30-action human baseline
+allows 150 model actions on that level. The game budget is also bounded by the
+sum of its level limits. A missing, invalid, or incomplete baseline is an
+evaluation error. An optional --max-actions N can lower the overall limit for
+short development runs. It never raises a level or game limit.
+
+Each model decision uses one action from the current level. The runner
+reserves that level's actions against the remaining game budget and adds
+them to the game total only when the model clears the level.
+Up to four model replies may be tried for that decision. Malformed JSON,
+unavailable actions, and invalid click coordinates are logged as rejected
+replies and use no additional action slots. The runner stops the game with
+an error if it cannot get a valid move after four replies. A failed model or
+game API request also ends the game with an error. An accepted move is a
+gameplay action that returns an ARC observation, even if the board stays the
+same. The ARC scorecard supplies its own action count and RHAE.
+
+The budget is checked before the next action. A move on the last allowed
+action can clear the level or win the game. Advancing gives the new level its
+own fresh budget, while the game budget retains the cost of completed levels.
+An active game ends with action_limit when it exhausts its budget and no
+recovery is available. A final WIN or GAME_OVER is reported as the
+corresponding ARC state.
+
+If ARC returns GAME_OVER or the current level uses its available action
+budget, the runner can restart that level via the SDK's RESET on the existing
+game session. Recovery requires a reset allowance and game budget remaining
+after accounting for completed levels. The --bounded-recovery N allowance
+defaults to two successful resets per game. A value of zero disables recovery.
+A successful reset zeroes the current level counter and discards its pending
+actions. Completed levels and their action costs carry forward. The runner
+requires an existing played session and checks that the reset response
+preserves its ID and completed levels.
+Initialization and recovery resets use no model action slots. The retry
+allowance, cumulative model action count, accepted-move count, and ARC
+scorecard accounting continue across resets.
+
+The task CSV reports model_actions, accepted_moves, recovery_resets, and the
+final game and level budget counts. Each action trace records the action
+index, recovery segment, level count and limit, and any model replies. Index zero
+is reserved for initial frames. The manifest records the selected games'
+baselines, computed limits, and recovery settings. Earlier run artifacts keep
+their original schema.
+
+The run directory also contains action_data.csv. The initial row records the
+SDK reset, action rows record model decisions and recovery resets, and a
+game_result row records the final game state, evaluator status, and score
+when available. The level column is one-based. attempt is one for the initial
+segment and increments after each level reset. The existing attempt_actions
+column tracks actions committed by cleared levels, and level_actions tracks the
+current level. Recovery rows show the counts before the reset, the resulting
+counts in attempt_actions_after and level_actions_after, and the discarded
+pending actions in refunded_level_actions. The reset_reason field records
+game_over when ARC returns GAME_OVER, or level_action_limit when an active
+level uses its own allowance or the remaining game budget. GAME_OVER takes
+priority if both conditions occur on the same move. The next model action
+starts at one for the current level. accepted is true when ARC returns an
+observation for the action. To count accepted gameplay
+moves, select rows with event=action, source=model, and accepted=True.
+The attempt_outcome column records won or lost when a gameplay action reaches
+WIN or GAME_OVER. The state and status on the game_result row also capture
+stops such as action_limit and errors. Invalid model replies that were retried
+are counted on the same action row as the chosen move.
+
+ARC-AGI-3 technical report
+https://arcprize.org/media/ARC_AGI_3_Technical_Report.pdf
+
+ARC Prize reference agent
+https://github.com/arcprize/arc-agi-3-benchmarking/blob/main/benchmarking/agent.py

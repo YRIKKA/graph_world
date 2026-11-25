@@ -1,0 +1,296 @@
+PNG saved to: graph.png
+
+
+mdp:
+True
+
+
+edge_costs:
+False
+
+
+restriction:
+(0.7, 0.2, 0.1)
+
+
+log_metadata:
+'graph_metadata.txt'
+
+
+cost_precision:
+12
+
+
+task_complexity:
+(1, 10)
+
+
+subgraphs:
+{1: {'graph_attributes': {'task_complexity': 6},
+     'nodes': [(0, {'theme': 'quantitative'}),
+               (1, {'theme': 'spatial'}),
+               (2, {'theme': 'quantitative'}),
+               (3, {'theme': 'physics'}),
+               (4, {'theme': 'spatial'}),
+               (5, {'theme': 'physics'}),
+               (6, {'theme': 'spatial'})],
+     'edges': [(0, 4, {}),
+               (1, 2, {}),
+               (1, 4, {}),
+               (1, 6, {}),
+               (2, 5, {}),
+               (2, 0, {}),
+               (2, 4, {}),
+               (3, 1, {}),
+               (3, 6, {}),
+               (3, 4, {}),
+               (5, 6, {}),
+               (5, 0, {}),
+               (5, 4, {}),
+               (6, 0, {}),
+               (6, 4, {})]},
+ 2: {'graph_attributes': {'task_complexity': 4},
+     'nodes': [(0, {'theme': 'spatial'}),
+               (1, {'theme': 'physics'}),
+               (2, {'theme': 'quantitative'}),
+               (3, {'theme': 'spatial'}),
+               (4, {'theme': 'quantitative'}),
+               (5, {'theme': 'spatial'}),
+               (6, {'theme': 'physics'}),
+               (7, {'theme': 'physics'}),
+               (8, {'theme': 'quantitative'})],
+     'edges': [(0, 3, {}),
+               (1, 0, {}),
+               (1, 3, {}),
+               (2, 7, {}),
+               (2, 8, {}),
+               (2, 4, {}),
+               (4, 5, {}),
+               (4, 0, {}),
+               (4, 3, {}),
+               (5, 1, {}),
+               (5, 0, {}),
+               (5, 3, {}),
+               (6, 8, {}),
+               (6, 4, {}),
+               (6, 0, {}),
+               (7, 6, {}),
+               (7, 8, {}),
+               (7, 5, {}),
+               (8, 4, {}),
+               (8, 0, {}),
+               (8, 3, {})]}}
+
+
+themes:
+['physics', 'spatial', 'quantitative']
+
+
+edge_cost_names:
+['water', 'time', 'energy']
+
+
+edge_cost_types:
+[<class 'int'>, <class 'int'>, <class 'int'>]
+
+
+n_subgraphs:
+2
+
+
+n_nodes_per_subgraph:
+(5, 10)
+
+
+out_degree:
+3
+
+
+graph:
+{'graph_attributes': {},
+ 'nodes': [((1, 0), {'theme': 'quantitative', 'restriction': 'forbidden'}),
+           ((1, 1), {'theme': 'spatial', 'restriction': 'forbidden'}),
+           ((1, 2), {'theme': 'quantitative', 'restriction': 'none'}),
+           ((1, 3), {'theme': 'physics', 'restriction': 'none'}),
+           ((1, 4), {'theme': 'spatial', 'restriction': 'none'}),
+           ((1, 5), {'theme': 'physics', 'restriction': 'discouraged'}),
+           ((1, 6), {'theme': 'spatial', 'restriction': 'none'}),
+           ((2, 0), {'theme': 'spatial', 'restriction': 'none'}),
+           ((2, 1), {'theme': 'physics', 'restriction': 'discouraged'}),
+           ((2, 2), {'theme': 'quantitative', 'restriction': 'none'}),
+           ((2, 3), {'theme': 'spatial', 'restriction': 'discouraged'}),
+           ((2, 4), {'theme': 'quantitative', 'restriction': 'discouraged'}),
+           ((2, 5), {'theme': 'spatial', 'restriction': 'none'}),
+           ((2, 6), {'theme': 'physics', 'restriction': 'none'}),
+           ((2, 7), {'theme': 'physics', 'restriction': 'discouraged'}),
+           ((2, 8), {'theme': 'quantitative', 'restriction': 'none'})],
+ 'edges': [((1, 0), (1, 4), {'transition_prob': 1.0}),
+           ((1, 1), (1, 2), {'transition_prob': 0.2514769619112836}),
+           ((1, 1), (1, 4), {'transition_prob': 0.26035373300223397}),
+           ((1, 1), (1, 6), {'transition_prob': 0.4881693050864825}),
+           ((1, 2), (1, 5), {'transition_prob': 0.3586970714452157}),
+           ((1, 2), (1, 0), {'transition_prob': 0.4576961397357302}),
+           ((1, 2), (1, 4), {'transition_prob': 0.18360678881905398}),
+           ((1, 3), (1, 1), {'transition_prob': 0.28072649418763074}),
+           ((1, 3), (1, 6), {'transition_prob': 0.4457796967806209}),
+           ((1, 3), (1, 4), {'transition_prob': 0.2734938090317483}),
+           ((1, 5), (1, 6), {'transition_prob': 0.4512721135850465}),
+           ((1, 5), (1, 0), {'transition_prob': 0.13576918446887448}),
+           ((1, 5), (1, 4), {'transition_prob': 0.412958701946079}),
+           ((1, 6), (1, 0), {'transition_prob': 0.7807332754198678}),
+           ((1, 6), (1, 4), {'transition_prob': 0.2192667245801322}),
+           ((2, 0), (2, 3), {'transition_prob': 1.0}),
+           ((2, 1), (2, 0), {'transition_prob': 0.5624838417431736}),
+           ((2, 1), (2, 3), {'transition_prob': 0.43751615825682644}),
+           ((2, 2), (2, 7), {'transition_prob': 0.16990788458831296}),
+           ((2, 2), (2, 8), {'transition_prob': 0.2798070039807732}),
+           ((2, 2), (2, 4), {'transition_prob': 0.21260007133489256}),
+           ((2, 2), (1, 6), {'transition_prob': 0.3376850400960214}),
+           ((2, 3), (1, 6), {'transition_prob': 1.0}),
+           ((2, 4), (2, 5), {'transition_prob': 0.44359286449967594}),
+           ((2, 4), (2, 0), {'transition_prob': 0.34395154256514104}),
+           ((2, 4), (2, 3), {'transition_prob': 0.212455592935183}),
+           ((2, 5), (2, 1), {'transition_prob': 0.26395974832217783}),
+           ((2, 5), (2, 0), {'transition_prob': 0.11049676587923601}),
+           ((2, 5), (2, 3), {'transition_prob': 0.4283830757975783}),
+           ((2, 5), (1, 6), {'transition_prob': 0.19716041000100798}),
+           ((2, 6), (2, 8), {'transition_prob': 0.504345353395211}),
+           ((2, 6), (2, 4), {'transition_prob': 0.25914850957732133}),
+           ((2, 6), (2, 0), {'transition_prob': 0.12211257185167962}),
+           ((2, 6), (1, 3), {'transition_prob': 0.11439356517578805}),
+           ((2, 7), (2, 6), {'transition_prob': 0.20585858995954276}),
+           ((2, 7), (2, 8), {'transition_prob': 0.45066915975149857}),
+           ((2, 7), (2, 5), {'transition_prob': 0.3434722502889587}),
+           ((2, 8), (2, 4), {'transition_prob': 0.1952251583226039}),
+           ((2, 8), (2, 0), {'transition_prob': 0.3270043075631135}),
+           ((2, 8), (2, 3), {'transition_prob': 0.28973012812913923}),
+           ((2, 8), (1, 4), {'transition_prob': 0.18804040598514343})]}
+
+
+node_themes:
+{(1, 0): 'quantitative',
+ (1, 1): 'spatial',
+ (1, 2): 'quantitative',
+ (1, 3): 'physics',
+ (1, 4): 'spatial',
+ (1, 5): 'physics',
+ (1, 6): 'spatial',
+ (2, 0): 'spatial',
+ (2, 1): 'physics',
+ (2, 2): 'quantitative',
+ (2, 3): 'spatial',
+ (2, 4): 'quantitative',
+ (2, 5): 'spatial',
+ (2, 6): 'physics',
+ (2, 7): 'physics',
+ (2, 8): 'quantitative'}
+
+
+adjacency_matrix:
+array([[0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [0., 0., 1., 0., 1., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [1., 0., 0., 0., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [0., 1., 0., 0., 1., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [1., 0., 0., 0., 1., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [1., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 1., 1.],
+       [0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 1., 0., 0., 0.],
+       [0., 0., 0., 0., 0., 0., 1., 1., 1., 0., 1., 0., 0., 0., 0., 0.],
+       [0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 1.],
+       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 0., 1.],
+       [0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 1., 1., 0., 0., 0., 0.]])
+
+
+dict_of_lists:
+{(1, 0): [(1, 4)],
+ (1, 1): [(1, 2), (1, 4), (1, 6)],
+ (1, 2): [(1, 5), (1, 0), (1, 4)],
+ (1, 3): [(1, 1), (1, 6), (1, 4)],
+ (1, 4): [],
+ (1, 5): [(1, 6), (1, 0), (1, 4)],
+ (1, 6): [(1, 0), (1, 4)],
+ (2, 0): [(2, 3)],
+ (2, 1): [(2, 0), (2, 3)],
+ (2, 2): [(2, 7), (2, 8), (2, 4), (1, 6)],
+ (2, 3): [(1, 6)],
+ (2, 4): [(2, 5), (2, 0), (2, 3)],
+ (2, 5): [(2, 1), (2, 0), (2, 3), (1, 6)],
+ (2, 6): [(2, 8), (2, 4), (2, 0), (1, 3)],
+ (2, 7): [(2, 6), (2, 8), (2, 5)],
+ (2, 8): [(2, 4), (2, 0), (2, 3), (1, 4)]}
+
+
+dict_of_dicts:
+{(1, 0): {(1, 4): {'transition_prob': 1.0}},
+ (1, 1): {(1, 2): {'transition_prob': 0.2514769619112836},
+          (1, 4): {'transition_prob': 0.26035373300223397},
+          (1, 6): {'transition_prob': 0.4881693050864825}},
+ (1, 2): {(1, 5): {'transition_prob': 0.3586970714452157},
+          (1, 0): {'transition_prob': 0.4576961397357302},
+          (1, 4): {'transition_prob': 0.18360678881905398}},
+ (1, 3): {(1, 1): {'transition_prob': 0.28072649418763074},
+          (1, 6): {'transition_prob': 0.4457796967806209},
+          (1, 4): {'transition_prob': 0.2734938090317483}},
+ (1, 4): {},
+ (1, 5): {(1, 6): {'transition_prob': 0.4512721135850465},
+          (1, 0): {'transition_prob': 0.13576918446887448},
+          (1, 4): {'transition_prob': 0.412958701946079}},
+ (1, 6): {(1, 0): {'transition_prob': 0.7807332754198678},
+          (1, 4): {'transition_prob': 0.2192667245801322}},
+ (2, 0): {(2, 3): {'transition_prob': 1.0}},
+ (2, 1): {(2, 0): {'transition_prob': 0.5624838417431736},
+          (2, 3): {'transition_prob': 0.43751615825682644}},
+ (2, 2): {(2, 7): {'transition_prob': 0.16990788458831296},
+          (2, 8): {'transition_prob': 0.2798070039807732},
+          (2, 4): {'transition_prob': 0.21260007133489256},
+          (1, 6): {'transition_prob': 0.3376850400960214}},
+ (2, 3): {(1, 6): {'transition_prob': 1.0}},
+ (2, 4): {(2, 5): {'transition_prob': 0.44359286449967594},
+          (2, 0): {'transition_prob': 0.34395154256514104},
+          (2, 3): {'transition_prob': 0.212455592935183}},
+ (2, 5): {(2, 1): {'transition_prob': 0.26395974832217783},
+          (2, 0): {'transition_prob': 0.11049676587923601},
+          (2, 3): {'transition_prob': 0.4283830757975783},
+          (1, 6): {'transition_prob': 0.19716041000100798}},
+ (2, 6): {(2, 8): {'transition_prob': 0.504345353395211},
+          (2, 4): {'transition_prob': 0.25914850957732133},
+          (2, 0): {'transition_prob': 0.12211257185167962},
+          (1, 3): {'transition_prob': 0.11439356517578805}},
+ (2, 7): {(2, 6): {'transition_prob': 0.20585858995954276},
+          (2, 8): {'transition_prob': 0.45066915975149857},
+          (2, 5): {'transition_prob': 0.3434722502889587}},
+ (2, 8): {(2, 4): {'transition_prob': 0.1952251583226039},
+          (2, 0): {'transition_prob': 0.3270043075631135},
+          (2, 3): {'transition_prob': 0.28973012812913923},
+          (1, 4): {'transition_prob': 0.18804040598514343}}}
+
+
+source:
+(2, 2)
+
+
+target:
+(1, 5)
+
+
+all_paths:
+[[(2, 2), (2, 7), (2, 6), (1, 3), (1, 1), (1, 2), (1, 5)]]
+
+
+all_shortest_paths:
+{'paths': [[(2, 2), (2, 7), (2, 6), (1, 3), (1, 1), (1, 2), (1, 5)]], 'costs': [{'distance': 6}]}
+
+
+multiobjective_shortest_paths:
+{'paths': [[(2, 2), (2, 7), (2, 6), (1, 3), (1, 1), (1, 2), (1, 5)]],
+ 'costs': [{'water': 6, 'time': 6, 'energy': 6, 'scalar_sum': 18}]}
+
+
+scalar_dijkstra:
+{'paths': [[(2, 2), (2, 7), (2, 6), (1, 3), (1, 1), (1, 2), (1, 5)]], 'costs': [{'scalar_sum': 18}]}
+
+
