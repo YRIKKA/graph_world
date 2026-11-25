@@ -8,8 +8,9 @@ import signal
 import socket
 import subprocess
 import time
-from contextlib import contextmanager, suppress
+from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -41,8 +42,14 @@ def serve_vllm(python, snapshot, name, log, *, context_limit, concurrent_jobs):
         "--no-enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser", "qwen3_coder",
         "--reasoning-parser", "qwen3",
     ]
-    with log.open("w", encoding="utf-8") as stream:
-        print(shlex.join(command), file=stream, flush=True)
+    with ExitStack() as stack, log.open("w", encoding="utf-8") as stream:
+        if not env.get("VLLM_RPC_BASE_PATH"):
+            # vLLM appends a UUID to this path for each Unix socket.
+            env["VLLM_RPC_BASE_PATH"] = stack.enter_context(
+                TemporaryDirectory(dir="/tmp", prefix="arc3-vllm.")
+            )
+        print(shlex.join(command), file=stream)
+        print(f"vLLM IPC directory: {env['VLLM_RPC_BASE_PATH']}", file=stream, flush=True)
         with subprocess.Popen(command, stdout=stream, stderr=subprocess.STDOUT,
                               env=env, start_new_session=True) as process:
             try:

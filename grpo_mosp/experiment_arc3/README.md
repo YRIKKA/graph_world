@@ -87,7 +87,10 @@ both. The local `vllm` environment uses vLLM 0.33.0, PyTorch 2.14.0,
 and the BitsAndBytes plugin 0.0.3. The vLLM adapter keeps prefix caching and speculative decoding
 disabled, normalizes streamed reasoning and tools for Duck, and closes
 the stream when the request deadline expires. In paired runs, server
-logs and native diagnostics are under each backend's directory.
+logs and native diagnostics are under each backend's directory. The launcher
+gives each vLLM server a short, private socket directory under `/tmp` and
+removes it on shutdown. Set `VLLM_RPC_BASE_PATH` to use a short, writable
+directory that you manage.
 
 `--model base` selects the existing frozen Qwen 4-bit checkpoint and is the
 default. To add another cached checkpoint, use
