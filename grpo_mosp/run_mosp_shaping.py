@@ -28,7 +28,7 @@ SHAPING_DEFAULTS=dict(shaping='ablation',edge_weight=.01,path_weight=.05,edge_ca
                       shaping_hypervolume=None,shaping_cost_diversity=None,shaping_path_disjointness=None,
                       shaping_edge=None,shaping_path=None,
                       hypervolume_weight=.05,cost_diversity_weight=.05,path_disjointness_weight=.05)
-MODULE='jm_test.graph_world.grpo_mosp'
+MODULE=base.MODULE
 
 
 def parser():

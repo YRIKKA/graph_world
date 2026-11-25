@@ -8,7 +8,7 @@ import networkx as nx
 
 # Use the exact implementation requested by the user, in graph_world/, rather
 # than reimplementing weighted plotting or constructing a new random graph.
-from jm_test.graph_world.generate_graph_world import GraphGenerator
+from generate_graph_world import GraphGenerator
 
 
 class SavedGraphPlotter(GraphGenerator):

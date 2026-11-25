@@ -118,7 +118,7 @@ def build(output, count=32, seed=42):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', default='jm_test/graph_world/grpo_mosp/data')
+    parser.add_argument('--output', default='grpo_mosp/data')
     parser.add_argument('--count', type=int, default=32)
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()

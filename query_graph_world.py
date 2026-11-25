@@ -2,7 +2,7 @@
 
 Run directly or as a module, for example::
 
-    python -m jm_test.graph_world.query_graph_world --model openai:MODEL_ID --n-replicates 10
+    python -m query_graph_world --model openai:MODEL_ID --n-replicates 10
 
 Each model sees the graph image first, followed by four questions in one
 conversation: graph_rep, shortest_paths, pareto_frontier, scalarized. Conversation
@@ -17,7 +17,7 @@ oracle-based answers without any API calls, keys, or .env loading. Mock results
 are marked in run metadata, each response, and log.txt; these are pipeline checks,
 not measurements of model ability. For example::
 
-    python -m jm_test.graph_world.query_graph_world --mock --n-replicates 1
+    python -m query_graph_world --mock --n-replicates 1
 
 Load provider credentials from environment variables or the repository .env:
 OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY (or GOOGLE_API_KEY). Provider
@@ -865,7 +865,7 @@ def main():
     parser.add_argument("--out-degree", nargs="+", default=[2], metavar="D",
                         help='Integer, quoted tuple "(LOWER,UPPER)", or two inclusive bounds (default: 2)')
     parser.add_argument("--themes", nargs="+", default=["physics", "spatial", "quantitative"])
-    parser.add_argument("--env-file", type=Path, default=Path(__file__).resolve().parents[2] / ".env")
+    parser.add_argument("--env-file", type=Path, default=Path(__file__).resolve().parent / ".env")
     parser.add_argument(
         "--output-dir", type=Path, default=Path(__file__).resolve().parent / "api_results",
         help="Parent directory for run_DATE_HH-MM-SS folders (default: api_results beside this script)",

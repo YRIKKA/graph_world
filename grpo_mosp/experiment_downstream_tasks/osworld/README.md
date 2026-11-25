@@ -12,7 +12,7 @@ against the original adapter file.
 
 ## Set up the benchmark
 
-Run these commands from `downstream_tasks/`. Use the GRPO CUDA environment for
+Run these commands from `grpo_mosp/experiment_downstream_tasks/`. Use the GRPO CUDA environment for
 model inference and OSWorld's separate, locked Python 3.12 environment for its
 runner. The config files with a `.yaml` extension use JSON syntax so the
 launcher can read them with the standard library.

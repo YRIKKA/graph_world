@@ -164,13 +164,13 @@ def test_multiple_models_share_one_run_without_overwriting_settings(tmp_path):
 
 
 def test_repository_relative_output_is_stable_from_script_or_other_directory(tmp_path):
-    relative = 'jm_test/graph_world/grpo_mosp/full_runs/run_20261103155500'
+    relative = 'grpo_mosp/full_runs/run_20261103155500'
     for cwd in (SCRIPT.parent,tmp_path):
         result = subprocess.run([str(SCRIPT),'--python',sys.executable,'--dry-run','--output',relative],
                                 cwd=cwd,capture_output=True,text=True)
         assert result.returncode == 0,result.stderr
         plan = json.loads(result.stdout)
-        assert Path(plan['output']) == runner.ROOT/relative
+        assert Path(plan['output']) == SCRIPT.parent.parent/relative
         assert plan['settings']['history_format'] == 'state_actions'
         assert plan['evaluation_config']['history_format'] == 'state_actions'
         assert all(c['history_format']=='state_actions' for c in plan['training_configs'].values())

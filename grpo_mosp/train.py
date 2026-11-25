@@ -282,7 +282,7 @@ def train(config):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config',default='jm_test/graph_world/grpo_mosp/configs/default.json')
+    parser.add_argument('--config',default='grpo_mosp/configs/default.json')
     add_thinking_arguments(parser)
     add_sampling_arguments(parser)
     add_training_arguments(parser)

@@ -1,7 +1,7 @@
 """Paired, graph-clustered before/after evaluation of frozen Qwen checkpoints.
 
 CLI stages: prepare -> run -> summarize; pilot-plan uses a separate pilot only.
-Run as python -m jm_test.graph_world.grpo_mosp.eval_baselines --help.
+Run as python -m grpo_mosp.eval_baselines --help.
 No policy weights are downloaded during suite preparation or aggregation.
 """
 import argparse
@@ -56,6 +56,8 @@ def file_hash(path):
 def verify_protocol_sources(sources, error_message):
     """Check current source hashes and exact, documented relocation digests."""
     relocations = json.loads((HERE/'configs/metadata/source_relocations.json').read_text())
+    for relocation in tuple(relocations.values()):
+        relocations.setdefault(relocation['path'], relocation)
     for name, expected in sources.items():
         relocation = relocations.get(name)
         path = HERE/(relocation['path'] if relocation else name)

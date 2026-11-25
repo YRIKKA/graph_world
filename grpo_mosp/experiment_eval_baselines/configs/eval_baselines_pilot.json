@@ -63,15 +63,15 @@
           "offload_embedding": true,
           "torch_compile": false
         },
-        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-101/adapter"
+        "adapter": "grpo_mosp/runs/seed-101/adapter"
       },
-      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-101/config.json",
-      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-101/training_compute.json",
+      "training_config": "grpo_mosp/runs/seed-101/config.json",
+      "training_compute": "grpo_mosp/runs/seed-101/training_compute.json",
       "selection": {
         "split": "validation",
-        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "dataset": "grpo_mosp/data/validation.jsonl",
         "criterion": "maximum mean validation S at B=8k",
-        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-101/validation_selection.json"
+        "evidence": "grpo_mosp/runs/seed-101/validation_selection.json"
       }
     },
     {
@@ -90,15 +90,15 @@
           "offload_embedding": true,
           "torch_compile": false
         },
-        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-202/adapter"
+        "adapter": "grpo_mosp/runs/seed-202/adapter"
       },
-      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-202/config.json",
-      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-202/training_compute.json",
+      "training_config": "grpo_mosp/runs/seed-202/config.json",
+      "training_compute": "grpo_mosp/runs/seed-202/training_compute.json",
       "selection": {
         "split": "validation",
-        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "dataset": "grpo_mosp/data/validation.jsonl",
         "criterion": "maximum mean validation S at B=8k",
-        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-202/validation_selection.json"
+        "evidence": "grpo_mosp/runs/seed-202/validation_selection.json"
       }
     },
     {
@@ -117,26 +117,26 @@
           "offload_embedding": true,
           "torch_compile": false
         },
-        "adapter": "jm_test/graph_world/grpo_mosp/runs/seed-303/adapter"
+        "adapter": "grpo_mosp/runs/seed-303/adapter"
       },
-      "training_config": "jm_test/graph_world/grpo_mosp/runs/seed-303/config.json",
-      "training_compute": "jm_test/graph_world/grpo_mosp/runs/seed-303/training_compute.json",
+      "training_config": "grpo_mosp/runs/seed-303/config.json",
+      "training_compute": "grpo_mosp/runs/seed-303/training_compute.json",
       "selection": {
         "split": "validation",
-        "dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+        "dataset": "grpo_mosp/data/validation.jsonl",
         "criterion": "maximum mean validation S at B=8k",
-        "evidence": "jm_test/graph_world/grpo_mosp/runs/seed-303/validation_selection.json"
+        "evidence": "grpo_mosp/runs/seed-303/validation_selection.json"
       }
     }
   ],
   "excluded_datasets": [
-    "jm_test/graph_world/grpo_mosp/data/train.jsonl"
+    "grpo_mosp/data/train.jsonl"
   ],
-  "validation_dataset": "jm_test/graph_world/grpo_mosp/data/validation.jsonl",
+  "validation_dataset": "grpo_mosp/data/validation.jsonl",
   "pilot_suite": null,
   "max_candidates_per_domain": 200000,
   "save_histories": false,
-  "output": "jm_test/graph_world/grpo_mosp/experiments/pilot",
+  "output": "grpo_mosp/experiments/pilot",
   "pilot_graph_grid": [
     20,
     40,

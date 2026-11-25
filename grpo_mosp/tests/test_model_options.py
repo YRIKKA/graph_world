@@ -65,7 +65,7 @@ def test_template_kwargs_survive_evaluation_wrapper():
 
 @pytest.mark.parametrize('module', ['train', 'eval_baselines', 'evaluate', 'smoke.smoke_nf4'])
 def test_model_entry_points_expose_both_flags(module):
-    result = subprocess.run([sys.executable, '-m', 'jm_test.graph_world.grpo_mosp.'+module, '--help'],
+    result = subprocess.run([sys.executable, '-m', 'grpo_mosp.'+module, '--help'],
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert '--reasoning-effort' in result.stdout and '--preserve-thinking' in result.stdout

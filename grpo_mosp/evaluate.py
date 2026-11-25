@@ -40,7 +40,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset')
     parser.add_argument('--k',type=int,default=3)
-    parser.add_argument('--output',default='jm_test/graph_world/grpo_mosp/evaluation.json')
+    parser.add_argument('--output',default='grpo_mosp/evaluation.json')
     parser.add_argument('--config')
     parser.add_argument('--adapter')
     parser.add_argument('--objective',choices=['pareto','hypervolume'])

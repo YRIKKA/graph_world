@@ -1,6 +1,6 @@
 # MOSP smoke checks
 
-Run these commands from the IsaacSim repository root using the relevant
+Run these commands from the `graph_world` repository root using the relevant
 Python 3.12 environment.
 
 | Check | What it exercises | Dependencies |
@@ -10,9 +10,9 @@ Python 3.12 environment.
 | GPU NF4 integration | Checks frozen likelihoods, a GRPO update, and saved adapter reload with the pinned Qwen checkpoint | [NF4 setup](../docs/NF4_SETUP.md) |
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.smoke
-python -m jm_test.graph_world.grpo_mosp.smoke.smoke_train
-python -m jm_test.graph_world.grpo_mosp.smoke.smoke_nf4
+python -m grpo_mosp.smoke
+python -m grpo_mosp.smoke.smoke_train
+python -m grpo_mosp.smoke.smoke_nf4
 ```
 
 The CPU checks print JSON summaries. The GPU check reads [smoke.json](smoke.json)

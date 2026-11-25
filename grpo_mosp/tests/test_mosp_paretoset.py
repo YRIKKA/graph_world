@@ -13,11 +13,11 @@ import paretoset as package
 from .. import mosp as demo_solver
 
 
-@pytest.fixture(params=['jm_test.graph_world', 'jm_test.graph_world.grpo_mosp'])
+@pytest.fixture(params=['', 'grpo_mosp'])
 def modules(request):
     # Check both public module locations used by the standalone world and GRPO.
-    return (import_module(request.param + '.mosp'),
-            import_module(request.param + '.generate_graph_world'))
+    prefix = f'{request.param}.' if request.param else ''
+    return import_module(prefix + 'mosp'), import_module(prefix + 'generate_graph_world')
 
 
 def test_package_filter_retains_ties_and_avoids_legacy_solvers(modules, monkeypatch):

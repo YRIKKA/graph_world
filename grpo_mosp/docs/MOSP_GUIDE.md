@@ -2,13 +2,13 @@
 
 For the optional four-condition discovery-reward experiment and lightweight
 frozen-base comparison, see [SHAPING.md](../experiment_shaping/SHAPING.md) and run
-`jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --dry-run`.
+`grpo_mosp/experiment_shaping/run_mosp_shaping.sh --dry-run`.
 The shaping launcher also supports `--curriculum-k` and optional
 `--curriculum-graph [JSON]`; its default graph-stage file is
 [graph_curriculum.json](../graph_curriculum.json).
 
 A self-contained, single-GPU implementation of outcome-supervised, multi-turn
-GRPO. Run commands from the **IsaacSim repository root** with Python 3.12.
+GRPO. Run commands from the **`graph_world` repository root** with Python 3.12.
 No Isaac Sim application or simulator imports are needed.
 
 ## Default policy and GPU
@@ -42,8 +42,8 @@ retains the earlier Qwen2.5 stack for legacy experiments. CPU-only graph checks
 need only `requirements-cpu.txt`.
 
 ```bash
-python -m pytest -q jm_test/graph_world/grpo_mosp/{tests,experiment_shaping,experiment_moo_rewards}
-python -m jm_test.graph_world.grpo_mosp.smoke.smoke_train
+python -m pytest -q grpo_mosp/{tests,experiment_shaping,experiment_moo_rewards}
+python -m grpo_mosp.smoke.smoke_train
 ```
 
 `smoke_train` uses a tiny random Qwen2 model and real LoRA/GRPO on CPU to test
@@ -55,10 +55,10 @@ The real-checkpoint smoke procedure is documented in [NF4_SETUP.md](NF4_SETUP.md
 Use the launcher to keep data, graph images, adapters, logs and caches together:
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode prepare --dry-run
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode train --python /path/to/isolated/python
+grpo_mosp/run_mosp.sh --mode prepare --dry-run
+grpo_mosp/run_mosp.sh --mode train --python /path/to/isolated/python
 # Then evaluate the printed run directory, without changing its controls:
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode eval --python /path/to/isolated/python \
+grpo_mosp/run_mosp.sh --mode eval --python /path/to/isolated/python \
   --output /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 

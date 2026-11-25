@@ -79,7 +79,7 @@ def make_data(output, settings):
     """
     from . import run_mosp as base
     from .dataset import load
-    from .eval_baselines import digest,file_hash,jsonl,write_json
+    from .eval_baselines import digest,file_hash,jsonl,verify_protocol_sources,write_json
     output=Path(output);directory=output/'data';directory.mkdir(exist_ok=True)
     manifest=directory/'manifest.json'
     pools=stage_datasets(output,settings)
@@ -91,8 +91,12 @@ def make_data(output, settings):
     sources['../generate_graph_world.py']=file_hash(Path(__file__).parent.parent/'generate_graph_world.py')
     if manifest.exists():
         saved=json.loads(manifest.read_text())
-        if saved['spec']!=spec or saved['generation_sources']!=sources or any(file_hash(directory/name)!=value for name,value in saved['files'].items()):
-            raise ValueError('Saved graph curriculum data changed; choose a fresh run')
+        error='Saved graph curriculum data changed; choose a fresh run'
+        saved_sources=saved['generation_sources']
+        if (saved['spec']!=spec or saved_sources.keys()!=sources.keys()
+                or any(file_hash(directory/name)!=value for name,value in saved['files'].items())):
+            raise ValueError(error)
+        verify_protocol_sources(saved_sources,error)
         return
     if any(directory.glob('*.jsonl')):
         raise ValueError('Incomplete existing graph curriculum data; choose a fresh run')

@@ -12,11 +12,11 @@ timestamp with whole-second precision. For example:
 Relative `--output` and `--runs-root` paths are resolved from the repository root,
 including when the shell script is invoked from its own directory.
 
-Use a Python 3.12 environment with CUDA-enabled PyTorch for training/evaluation:
+Run the examples from the `graph_world` repository root. Use a Python 3.12 environment with CUDA-enabled PyTorch for training/evaluation:
 
 ```bash
-pip install -r jm_test/graph_world/grpo_mosp/requirements-eval.txt
-jm_test/graph_world/grpo_mosp/run_mosp.sh --python /path/to/venv/bin/python --help
+pip install -r grpo_mosp/requirements-eval.txt
+grpo_mosp/run_mosp.sh --python /path/to/venv/bin/python --help
 ```
 
 The shell launcher initializes Conda and activates `grpo`, then uses `python3.12` by default. `--python` or `MOSP_PYTHON` selects a
@@ -28,9 +28,9 @@ caches, plotting caches and stage logs are also contained inside the same run.
 ## Run a training and comparison experiment
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh \
+grpo_mosp/run_mosp.sh \
   --python /path/to/venv/bin/python \
-  --runs-root jm_test/graph_world/grpo_mosp/full_runs \
+  --runs-root grpo_mosp/full_runs \
   --mode all \
   --train-graphs 64 --validation-graphs 32 \
   --subgraphs 2 --nodes-per-subgraph 6 12 --outdegree 2 \
@@ -66,9 +66,9 @@ retry in the next second or use that existing run explicitly for a later stage.
 ## Smaller GPU plumbing check
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh \
+grpo_mosp/run_mosp.sh \
   --python /path/to/venv/bin/python \
-  --runs-root jm_test/graph_world/grpo_mosp/full_runs \
+  --runs-root grpo_mosp/full_runs \
   --training-runs 1 --steps 1 --group-size 2 \
   --train-graphs 4 --validation-graphs 2 --eval-graphs 10 \
   --curriculum 1 --attempts-per-graph 2 \
@@ -94,7 +94,7 @@ Custom evaluation budget lists must include the prespecified primary B=8k.
 For example, first train with custom parameters:
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode train \
+grpo_mosp/run_mosp.sh --mode train \
   --runs-root /path/to/full_runs --attempts-per-graph 24 --steps 100
 ```
 
@@ -102,7 +102,7 @@ The launcher prints the newly created run directory. Evaluate that same director
 without repeating those settings (replace the example timestamp below):
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode eval \
+grpo_mosp/run_mosp.sh --mode eval \
   --output /path/to/full_runs/run_20261103123015
 ```
 
@@ -188,7 +188,7 @@ scores for validation or select favorable evaluation repetitions.
 ## Mandatory graph images and artifact layout
 
 Every saved training, validation and held-out graph is exported with
-`GraphGenerator.plot_graph` from `jm_test/graph_world/generate_graph_world.py`.
+`GraphGenerator.plot_graph` from `generate_graph_world.py`.
 The renderer receives the saved topology and exact ordered edge-cost names,
 with edge-cost display enabled and transition-probability display disabled.
 Source and target have distinct node colors. All objective weights and their
@@ -243,7 +243,7 @@ intervals, with separate domain panels for both experiment modes. `--no-plots`
 disables metric figures. To export them from saved results without inference:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.figures \
+python -m grpo_mosp.figures \
   --run /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 
@@ -268,7 +268,7 @@ Use the printed run directory as `--output` when adding another model. Supply th
 new model's immutable revision and its training controls as needed:
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh --mode all \
+grpo_mosp/run_mosp.sh --mode all \
   --output /path/to/full_runs/run_20261103123015 \
   --model Qwen/ANOTHER_CHECKPOINT --revision FULL_40_CHARACTER_COMMIT
 ```
@@ -351,7 +351,7 @@ model, use:
 
 ```bash
 conda activate grpo
-python -m jm_test.graph_world.grpo_mosp.reporting \
+python -m grpo_mosp.reporting \
   --output /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 
@@ -374,7 +374,7 @@ CLI values override JSON fields with the corresponding underscore names; omitted
 flags retain saved settings. Missing JSON fields use the defaults above. For example:
 
 ```bash
-jm_test/graph_world/grpo_mosp/run_mosp.sh --dry-run \
+grpo_mosp/run_mosp.sh --dry-run \
   --reasoning-effort medium --preserve-thinking false
 ```
 

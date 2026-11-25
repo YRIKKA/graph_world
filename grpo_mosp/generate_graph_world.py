@@ -22,7 +22,7 @@ Notes on the pareto frontier.
 Different `scalar_sum` values are expected: **Pareto-optimal paths represent tradeoffs between objectives; 
 they do not necessarily minimize their sum.**
 
-In [generate_graph_world.py:164](/home/ubuntu/IsaacSim/jm_test/graph_world/generate_graph_world.py:164), 
+In [generate_graph_world.py:164](generate_graph_world.py:164),
 the computation works as follows:
 
 1. Select the objectives from `self.edge_cost_names`, normally `water`, `time`, and `energy`.

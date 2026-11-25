@@ -13,8 +13,8 @@ from pathlib import Path
 import sys
 
 if __package__ in (None, ''):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
-    __package__ = 'jm_test.graph_world.grpo_mosp.experiment_moo_rewards'
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    __package__ = 'grpo_mosp.experiment_moo_rewards'
 
 from .. import figures
 from .. import run_mosp_shaping as runner

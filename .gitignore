@@ -1,5 +1,5 @@
 .env
-graph_world/grpo_mosp/full_runs
+/grpo_mosp/full_runs/
 *_results
 *runs
 *.png

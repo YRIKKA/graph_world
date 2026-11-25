@@ -21,8 +21,8 @@ import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]
-MODULE = 'jm_test.graph_world.grpo_mosp'
+ROOT = HERE.parent
+MODULE = 'grpo_mosp'
 from .model_defaults import DEFAULT_MODEL, DEFAULT_REVISION, initial_checkpoint, loading_contract
 from .run_artifacts import BASELINE_PRESET_DIR, artifact_environment, model_slug, new_run_directory, validate_run_directory, RUN_TIMEZONE
 from .pipeline_timing import PipelineTiming, timed_component
@@ -336,7 +336,7 @@ def make_data(output, c, graph, exclusions=()):
     from .dataset import Instance, generate
     from .oracle import enumerate_paths
     from .graph_images import export_graph_image
-    from .eval_baselines import IsomorphismIndex, digest, file_hash, jsonl, write_json
+    from .eval_baselines import IsomorphismIndex, digest, file_hash, jsonl, verify_protocol_sources, write_json
     directory = output/'data'
     directory.mkdir(exist_ok=True)
     manifest_path = directory/'manifest.json'
@@ -348,8 +348,12 @@ def make_data(output, c, graph, exclusions=()):
     sources['../generate_graph_world.py'] = file_hash(HERE.parent/'generate_graph_world.py')
     if manifest_path.exists():
         saved = json.loads(manifest_path.read_text())
-        if saved['spec'] != spec or saved.get('generation_sources') != sources or any(file_hash(directory/name) != value for name, value in saved['files'].items()):
-            raise ValueError('Saved training/validation data changed; use a fresh output directory')
+        error = 'Saved training/validation data changed; use a fresh output directory'
+        saved_sources = saved.get('generation_sources', {})
+        if (saved['spec'] != spec or saved_sources.keys() != sources.keys()
+                or any(file_hash(directory/name) != value for name, value in saved['files'].items())):
+            raise ValueError(error)
+        verify_protocol_sources(saved_sources, error)
         return
     if any(directory.glob('*.jsonl')):
         raise ValueError('Incomplete existing dataset; use a fresh output directory')
@@ -415,9 +419,10 @@ def verify_saved_suite(output, model):
     for name, expected in manifest.get('graph_images', {}).items():
         if evaluation.file_hash(comparison/name) != expected:
             raise ValueError('Saved graph images changed after suite creation')
-    for name, expected in manifest['protocol_sources'].items():
-        if evaluation.file_hash(HERE/name) != expected:
-            raise ValueError('Protocol code changed after suite creation; choose a fresh output directory')
+    evaluation.verify_protocol_sources(
+        manifest['protocol_sources'],
+        'Protocol code changed after suite creation; choose a fresh output directory',
+    )
     for path, expected in manifest['excluded_files'].items():
         if evaluation.file_hash(path) != expected:
             raise ValueError('Training/validation data changed after suite creation')

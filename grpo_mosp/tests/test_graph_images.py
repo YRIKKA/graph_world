@@ -7,7 +7,7 @@ import tempfile
 from zoneinfo import ZoneInfo
 
 from ..graph_images import export_graph_image
-from jm_test.graph_world.generate_graph_world import GraphGenerator
+from generate_graph_world import GraphGenerator
 from ..run_artifacts import artifact_environment, new_run_directory, validate_run_directory
 from .helpers import fixture
 

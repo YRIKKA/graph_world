@@ -17,7 +17,7 @@ source /home/ubuntu/miniconda/etc/profile.d/conda.sh
 conda activate grpo
 
 mosp_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-mosp_repo_root="$(cd -- "${mosp_script_dir}/../../.." && pwd -P)"
+mosp_repo_root="$(cd -- "${mosp_script_dir}/.." && pwd -P)"
 mosp_python="${MOSP_PYTHON:-python3.12}"
 mosp_args=("$@")
 
@@ -40,5 +40,5 @@ export PYTHONPATH="${mosp_repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
 # Resolve relative CLI paths consistently when invoked from any directory.
 cd -- "${mosp_repo_root}"
 # The shaping wrapper reuses Conda initialization and argument forwarding.
-mosp_module="${MOSP_MODULE:-jm_test.graph_world.grpo_mosp.run_mosp}"
+mosp_module="${MOSP_MODULE:-grpo_mosp.run_mosp}"
 exec "${mosp_python}" -m "${mosp_module}" "${mosp_args[@]}"

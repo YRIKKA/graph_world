@@ -1,5 +1,7 @@
 # Shaping ablation and lightweight evaluation
 
+Run the commands from the `graph_world` repository root.
+
 ## Combined seven-agent experiment
 
 `experiment_shaping.py` and `experiment_shaping.sh` run exactly `none`, `edge`,
@@ -11,16 +13,16 @@ configured task cell, with its results reused for every comparison.
 
 ```bash
 # Inspect the complete seven-agent plan without writing files or loading models.
-jm_test/graph_world/grpo_mosp/experiment_shaping/experiment_shaping.sh --dry-run
+grpo_mosp/experiment_shaping/experiment_shaping.sh --dry-run
 
 # Train all seven and export one combined report against the frozen base.
-jm_test/graph_world/grpo_mosp/experiment_shaping/experiment_shaping.sh
+grpo_mosp/experiment_shaping/experiment_shaping.sh
 
 # Override the profile for a shorter screen.
-jm_test/graph_world/grpo_mosp/experiment_shaping/experiment_shaping.sh --steps 12 --group-size 2
+grpo_mosp/experiment_shaping/experiment_shaping.sh --steps 12 --group-size 2
 
 # Evaluate/reuse an existing seven-condition run with its saved settings.
-jm_test/graph_world/grpo_mosp/experiment_shaping/experiment_shaping.sh --mode eval \
+grpo_mosp/experiment_shaping/experiment_shaping.sh --mode eval \
   --output /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 
@@ -50,7 +52,7 @@ curves and eight-checkpoint bar charts are under `figures/<model>/`.
 The generic launcher now also accepts an arbitrary explicit list:
 
 ```bash
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh \
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh \
   --shaping-combinations none edge path hypervolume cost_diversity path_disjointness all
 ```
 
@@ -65,7 +67,7 @@ The launcher supports three independently controlled training samplers:
 
 ```bash
 # Replacement-sampling control, then coverage, balancing, and adaptation.
-run=jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh
+run=grpo_mosp/experiment_shaping/run_mosp_shaping.sh
 $run --shaping none --shuffle-graphs false
 $run --shaping none --shuffle-graphs true
 $run --shaping none --shuffle-graphs true --balance-graphs true
@@ -178,18 +180,18 @@ Conda environment through `run_mosp.sh`. No additional packages are required.
 
 ```bash
 # Inspect all four conditions without writing files or loading weights.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --dry-run
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --dry-run
 
 # Prepare shared data, train four agents, then compare with the frozen NF4 base.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh
 
 # Select just one condition: none, edge (option 1), path (option 2), or both.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping edge
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping path
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping both
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping edge
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping path
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --shaping both
 
 # Increase replication after a separate pilot; seeds are paired across conditions.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --training-seeds 101,202,303
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --training-seeds 101,202,303
 ```
 
 `--shaping ablation` is the default: train `none`, `edge`, `path`, and `both`,
@@ -217,13 +219,13 @@ Graph complexity is optional:
 
 ```bash
 # Omitted flag: fixed graph distribution, as before.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --curriculum-k 1,2,3
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --curriculum-k 1,2,3
 
 # Bare flag: use grpo_mosp/graph_curriculum.json.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --curriculum-graph --dry-run
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --curriculum-graph --dry-run
 
 # Explicit file: relative paths are anchored to the repository root.
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh \
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh \
   --curriculum-graph path/to/curriculum.json --curriculum-k 1,2,3
 ```
 
@@ -389,10 +391,10 @@ weights/caps on pilot or validation data, not the held-out comparison results.
 ## Separate stages and artifacts
 
 ```bash
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode prepare
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode train
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode prepare
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode train
 # Supply the directory printed by the training launch:
-jm_test/graph_world/grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode eval \
+grpo_mosp/experiment_shaping/run_mosp_shaping.sh --mode eval \
   --output /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 
@@ -444,7 +446,7 @@ disables these metric exports, while graph images are still exported.
 To export figures from an existing run without loading models or rerunning tasks:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.figures \
+python -m grpo_mosp.figures \
   --run /path/to/full_runs/run_YYYYMMDDHHMMSS
 ```
 
@@ -454,7 +456,7 @@ Optimizer counts inferred from older logs are labeled as inferred.
 Standalone lightweight evaluator:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.eval_shaping all \
+python -m grpo_mosp.eval_shaping all \
   --config /path/to/full_runs/run_YYYYMMDDHHMMSS/<model>_trained/shaping/configs/eval_shaping.json
 # Or use prepare, run, summarize individually; summarize accepts --no-plots.
 ```

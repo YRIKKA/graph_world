@@ -2,7 +2,7 @@
 
 `eval_baselines.py` implements a comparison experiment; it does not assume that
 post-training improved the policy. The estimated effect and its uncertainty are
-the result. Run every command from the IsaacSim repository root in a separate
+the result. Run every command from the `graph_world` repository root in a separate
 Python 3.12 environment. No pretrained checkpoint is downloaded by `prepare`,
 `summarize`, or `pilot-plan`.
 
@@ -94,7 +94,7 @@ experiment instead of being silently converted to a task outcome.
 Install training and plotting dependencies:
 
 ```bash
-pip install -r jm_test/graph_world/grpo_mosp/requirements-eval.txt
+pip install -r grpo_mosp/requirements-eval.txt
 ```
 
 Generate the training/validation data if it is not already fixed, and train
@@ -103,7 +103,7 @@ independent seeds using the supplied `configs/train_seed_101.json`,
 `train_seed_505.json`. For example:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.train --config jm_test/graph_world/grpo_mosp/configs/train_seed_101.json
+python -m grpo_mosp.train --config grpo_mosp/configs/train_seed_101.json
 ```
 
 There must be **five actual independently trained adapters** for the final
@@ -155,12 +155,12 @@ The pilot template uses 50 separate graph families and the first three independe
 training runs, with five repetitions. Train those three runs, then:
 
 ```bash
-mkdir -p jm_test/graph_world/grpo_mosp/experiments/pilot
-python -m jm_test.graph_world.grpo_mosp.eval_baselines select-validation --config jm_test/graph_world/grpo_mosp/experiment_eval_baselines/configs/eval_baselines_pilot.json --selected-config jm_test/graph_world/grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines prepare --config jm_test/graph_world/grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines run --config jm_test/graph_world/grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines summarize --config jm_test/graph_world/grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines pilot-plan --config jm_test/graph_world/grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
+mkdir -p grpo_mosp/experiments/pilot
+python -m grpo_mosp.eval_baselines select-validation --config grpo_mosp/experiment_eval_baselines/configs/eval_baselines_pilot.json --selected-config grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
+python -m grpo_mosp.eval_baselines prepare --config grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
+python -m grpo_mosp.eval_baselines run --config grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
+python -m grpo_mosp.eval_baselines summarize --config grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
+python -m grpo_mosp.eval_baselines pilot-plan --config grpo_mosp/experiments/pilot/eval_baselines_pilot.selected.json
 ```
 
 `pilot-plan` projects the primary ID paired-interval halfwidth for a grid of graph
@@ -177,11 +177,11 @@ Finish the additional training runs, finalize any validation-only checkpoint
 selection, and run the default 200-family confirmatory experiment:
 
 ```bash
-mkdir -p jm_test/graph_world/grpo_mosp/experiments/confirmatory
-python -m jm_test.graph_world.grpo_mosp.eval_baselines select-validation --config jm_test/graph_world/grpo_mosp/experiment_eval_baselines/configs/eval_baselines.json --selected-config jm_test/graph_world/grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines prepare --config jm_test/graph_world/grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines run --config jm_test/graph_world/grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
-python -m jm_test.graph_world.grpo_mosp.eval_baselines summarize --config jm_test/graph_world/grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
+mkdir -p grpo_mosp/experiments/confirmatory
+python -m grpo_mosp.eval_baselines select-validation --config grpo_mosp/experiment_eval_baselines/configs/eval_baselines.json --selected-config grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
+python -m grpo_mosp.eval_baselines prepare --config grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
+python -m grpo_mosp.eval_baselines run --config grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
+python -m grpo_mosp.eval_baselines summarize --config grpo_mosp/experiments/confirmatory/eval_baselines.selected.json
 ```
 
 The confirmatory preparation excludes the saved pilot suite, even when graph IDs
@@ -268,7 +268,7 @@ The experiment directory contains:
 Run the CPU acceptance tests with plotting dependencies installed:
 
 ```bash
-python -m pytest -q jm_test/graph_world/grpo_mosp/tests/test_eval_baselines.py
+python -m pytest -q grpo_mosp/tests/test_eval_baselines.py
 ```
 
 Tests cover isomorphic training-copy exclusion, actual cost shifts, immutable

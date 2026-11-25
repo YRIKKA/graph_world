@@ -10,8 +10,8 @@ from pathlib import Path
 
 # Support both `python -m ...experiment_shaping` and the requested script path.
 if __package__ in (None,''):
-    sys.path.insert(0,str(Path(__file__).resolve().parents[4]))
-    from jm_test.graph_world.grpo_mosp import run_mosp_shaping as runner
+    sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+    from grpo_mosp import run_mosp_shaping as runner
 else:
     from .. import run_mosp_shaping as runner
 

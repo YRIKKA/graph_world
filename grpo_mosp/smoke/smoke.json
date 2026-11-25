@@ -5,8 +5,8 @@
   "context_limit": 4096,
   "temperature": 1.0,
   "seed": 42,
-  "dataset": "jm_test/graph_world/grpo_mosp/data/train.jsonl",
-  "output": "jm_test/graph_world/grpo_mosp/runs/qwen-smoke",
+  "dataset": "grpo_mosp/data/train.jsonl",
+  "output": "grpo_mosp/runs/qwen-smoke",
   "curriculum": [
     1
   ],

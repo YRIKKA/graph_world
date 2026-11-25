@@ -7,7 +7,7 @@ and visualizer run on the same EC2 instance.
 
 ## Install and run
 
-Run from `downstream_tasks/`. Setup pins the public AutomationBench checkout and
+Run from `grpo_mosp/experiment_downstream_tasks/`. Setup pins the public AutomationBench checkout and
 installs its locked runtime dependencies in an isolated Python 3.13 environment.
 The model endpoint uses the existing GRPO CUDA environment. Override its
 interpreter with `--model-python` when needed.

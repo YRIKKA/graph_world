@@ -17,11 +17,12 @@ it with a text-completion trainer. No vLLM or separate reference model is used.
 
 ## Installation and launch
 
-Use an isolated Python 3.12 environment. For a fully contained run, create the
-runtime inside the run directory before invoking the launcher:
+Run the commands from the `graph_world` repository root in an isolated
+Python 3.12 environment. For a fully contained run, create the runtime inside
+the run directory before invoking the launcher:
 
 ```bash
-mosp_base=jm_test/graph_world/grpo_mosp
+mosp_base=grpo_mosp
 mosp_run="$mosp_base/full_runs/run_$(TZ=America/New_York date +%Y%m%d%H%M%S%6N)"
 mkdir -p "$mosp_run/runtime"
 python3.12 -m venv "$mosp_run/runtime/venv"
@@ -94,7 +95,7 @@ revision in a separate run. Their results do not represent this NF4 comparison.
 ## Reproducible real-checkpoint integration smoke
 
 ```bash
-/path/to/isolated/python -m jm_test.graph_world.grpo_mosp.smoke.smoke_nf4
+/path/to/isolated/python -m grpo_mosp.smoke.smoke_nf4
 ```
 
 This creates a new timestamped run, exports the fixed diagnostic graph with edge

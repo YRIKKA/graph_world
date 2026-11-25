@@ -26,11 +26,11 @@ from pymoo.indicators.hv import HV
 from pymoo.indicators.igd_plus import IGDPlus
 
 if __package__ in (None, ''):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
-    from jm_test.graph_world.grpo_mosp.experiment_moo_rewards.moo_rewards import COMBINATIONS, functions_for
-    from jm_test.graph_world.grpo_mosp.rewards import Reward
-    from jm_test.graph_world.grpo_mosp.reporting import table
-    from jm_test.graph_world.grpo_mosp.run_artifacts import console_log
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from grpo_mosp.experiment_moo_rewards.moo_rewards import COMBINATIONS, functions_for
+    from grpo_mosp.rewards import Reward
+    from grpo_mosp.reporting import table
+    from grpo_mosp.run_artifacts import console_log
 else:
     from .moo_rewards import COMBINATIONS, functions_for
     from ..rewards import Reward

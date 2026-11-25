@@ -22,8 +22,8 @@ if __name__ == "__main__":
     sys.dont_write_bytecode = True
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
-    __package__ = "jm_test.graph_world.grpo_mosp.experiment_arc3"
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    __package__ = "grpo_mosp.experiment_arc3"
 
 from ..experiment_downstream_tasks.checkpoints import MODEL_CONFIG, load_selection, read_json, serve_checkpoint
 from ..experiment_downstream_tasks.serve_qwen import DEADLINE_HEADER, REASONING_EFFORTS
@@ -711,7 +711,7 @@ def main():
     if args.max_output_tokens is not None and not args.deadline:
         parser.error("--max-output-tokens requires --deadline")
     if not runner_installed():
-        parser.error("Install the runner with python -m jm_test.graph_world.grpo_mosp.experiment_arc3.duck.install --runner")
+        parser.error("Install the runner with python -m grpo_mosp.experiment_arc3.duck.install --runner")
     config = json.loads((UPSTREAM / "configs/inference.json").read_text(encoding="utf-8"))
     environment = config["environment"]
     args.n_passes = args.n_passes or environment["n_passes"]

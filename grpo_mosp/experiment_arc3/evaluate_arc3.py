@@ -24,8 +24,8 @@ if __name__ == "__main__":
     sys.dont_write_bytecode = True
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
-    __package__ = "jm_test.graph_world.grpo_mosp.experiment_arc3"
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    __package__ = "grpo_mosp.experiment_arc3"
 
 from ..experiment_downstream_tasks.checkpoints import (
     add_model_options,
@@ -36,7 +36,7 @@ from ..experiment_downstream_tasks.checkpoints import (
 from ..run_artifacts import artifact_environment
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[3]
+REPO = HERE.parents[1]
 DIFFICULTIES = ("easy", "medium", "hard", "extra hard")
 CONTEXT_TOKENS = 262_144
 COMPLETION_TOKENS = 131_072

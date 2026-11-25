@@ -1,13 +1,13 @@
 # ARC-AGI-3 Qwen evaluation
 
-Run from the IsaacSim repository root with the GRPO CUDA environment available.
+Run from the `graph_world` repository root with the GRPO CUDA environment available.
 The evaluator uses the same cached NF4 base and eight LoRA adapters selected by
 the OSWorld evaluator. It loads one model at a time.
 
 ```bash
 conda activate grpo
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3 --list-games
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3
+python -m grpo_mosp.experiment_arc3.evaluate_arc3 --list-games
+python -m grpo_mosp.experiment_arc3.evaluate_arc3
 ```
 
 ## Duck comparison
@@ -17,8 +17,8 @@ python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3
 the same selected games with the existing frozen NF4 checkpoint:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.duck.install
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3 \
+python -m grpo_mosp.experiment_arc3.duck.install
+python -m grpo_mosp.experiment_arc3.evaluate_arc3 \
   --model base --harness none --harness duck --n-tasks 1 --seed 42
 ```
 
@@ -52,15 +52,15 @@ and BitsAndBytes in `grpo`.
 
 ```bash
 conda activate grpo
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.duck.install --runner
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3_duck \
+python -m grpo_mosp.experiment_arc3.duck.install --runner
+python -m grpo_mosp.experiment_arc3.evaluate_arc3_duck \
   --environments-dir /path/to/tufa/game-bundle
 ```
 
 Compare both policies in one hosted ARC run:
 
 ```bash
-python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3_duck \
+python -m grpo_mosp.experiment_arc3.evaluate_arc3_duck \
   --online --game su15 --n-passes 1 --concurrent-jobs 1 \
   --harness none duck --deadline --reasoning-effort low medium
 ```
@@ -74,7 +74,7 @@ backend, policy, or effort when the corresponding list has multiple entries.
 Compare the two serving backends with Duck on one GPU:
 
 ```bash
-./jm_test/graph_world/grpo_mosp/experiment_arc3/run_evaluate_arc3_duck.sh \
+./grpo_mosp/experiment_arc3/run_evaluate_arc3_duck.sh \
   --online --game su15 --model base --harness duck --reasoning-effort medium \
   --backend transformers vllm --deadline --n-passes 1 --concurrent-jobs 1
 ```
@@ -93,8 +93,8 @@ logs and native diagnostics are under each backend's directory.
 default. To add another cached checkpoint, use
 `--model base other=/absolute/path/to/snapshot`. For reusable names, add
 an alias-to-path mapping under `base_models` in
-`experiment_downstream_tasks/models.yaml` and pass those aliases to
-`--model`. Paths in that mapping can be relative to the file. Use local
+[models.yaml](../experiment_downstream_tasks/models.yaml) and pass those
+aliases to `--model`. Paths in that mapping can be relative to the file. Use local
 multimodal checkpoints compatible with the nested NF4 server and Qwen's
 chat template. The runner loads one model at a time.
 
@@ -112,9 +112,11 @@ can time out while waiting behind other workers.
 
 Use the same offline game bundle as Tufa for matching environment
 conditions. For the hosted ARC API, pass `--online`. This mode reads
-`ARC_API_KEY` from the shell or the repository-root `.env`.
+`ARC_API_KEY` from the shell or `graph_world/.env`. Use `--env-file PATH`
+if your key is stored elsewhere. For example, use `--env-file ../.env`
+if you still keep it in the parent directory.
 A smaller hosted pilot is
-`python -m jm_test.graph_world.grpo_mosp.experiment_arc3.evaluate_arc3_duck --online --game ar25 --n-passes 1 --concurrent-jobs 1`.
+`python -m grpo_mosp.experiment_arc3.evaluate_arc3_duck --online --game ar25 --n-passes 1 --concurrent-jobs 1`.
 The runner writes native reports and the pinned configuration manifest to
 `runs/<timestamp>/`.
 
