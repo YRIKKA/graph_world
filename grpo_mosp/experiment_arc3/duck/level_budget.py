@@ -8,20 +8,27 @@ from inference.agent.runtime_state import RUNTIME_STATE_FILENAME
 from inference.agent.tool_agent import AnalyzerTurnResult
 from inference.framework.solver import HarnessSolver, _HarnessGameSession
 
+from .move_budget import NoGameProgress
+
 
 class TimedAnalyzer:
     def __init__(self, session, analyzer):
         self.session = session
         self.analyzer = analyzer
+        self.move_budget = analyzer.move_budget
 
     @property
     def generated_tokens(self):
         return self.analyzer.generated_tokens
 
+    def refresh_after_reset(self, state_path, payload):
+        self.analyzer.refresh_after_reset(state_path, payload)
+
     def analyze(self, *args, **kwargs):
         session = self.session
         if session.should_stop():
             return AnalyzerTurnResult(step_executed=False)
+        self.move_budget.check()
         if session.level_remaining() <= 0:
             session.restart_level("level_time_limit")
             return AnalyzerTurnResult(step_executed=False)
@@ -29,6 +36,8 @@ class TimedAnalyzer:
         budget_expired = False
         try:
             result = self.analyzer.analyze(*args, **kwargs)
+        except NoGameProgress:
+            raise
         except Exception as error:
             budget_expired = getattr(error, "budget_limited", False)
             if not budget_expired and session.level_remaining() > 0:
@@ -36,9 +45,11 @@ class TimedAnalyzer:
             result = AnalyzerTurnResult(step_executed=False)
         finally:
             session.analyzing = False
-        if not session.should_stop() and (budget_expired or session.level_remaining() <= 0):
-            session.restart_level("level_time_limit")
-            return AnalyzerTurnResult(step_executed=False)
+        if not session.should_stop():
+            self.move_budget.check()
+            if budget_expired or session.level_remaining() <= 0:
+                session.restart_level("level_time_limit")
+                return AnalyzerTurnResult(step_executed=False)
         return result
 
 
@@ -55,7 +66,10 @@ class LevelSession(_HarnessGameSession):
         return self.solver.level_timeout - (time.monotonic() - self.level_started_at)
 
     def should_stop(self):
-        return super().should_stop() or (self.analyzing and self.level_remaining() <= 0)
+        # The response to the final permitted call can still execute a move.
+        return super().should_stop() or (
+            self.analyzing and (self.level_remaining() <= 0 or self.analyzer.move_budget.time_expired())
+        )
 
     def request_timeout_seconds(self):
         job_remaining = super().request_timeout_seconds()
@@ -73,6 +87,10 @@ class LevelSession(_HarnessGameSession):
             raise ValueError("RESET is managed by the level recovery budget")
         completed = self.game.current_state.levels_completed
         payload = super()._execute_action(action, **kwargs)
+        if action.id == GameAction.RESET:
+            self.analyzer.refresh_after_reset(self.state_path, payload)
+        else:
+            self.analyzer.move_budget.accepted_move()
         if self.game.current_state.levels_completed > completed:
             self.level_started_at = time.monotonic()
             self.level_has_moves = False

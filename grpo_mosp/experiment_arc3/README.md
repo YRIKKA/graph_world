@@ -150,10 +150,16 @@ than the client timeout when using `--deadline`. A transport failure gets one
 retry. `--game-timeout` resets on a level advance or level retry.
 `--bounded-recovery N` allows up to two retries per level by default.
 Game over and level-time exhaustion use this allowance. Each retry
-restores the current level and gives it a fresh time budget. A standalone
+restores the current level and gives it a fresh level budget. A standalone
 request deadline or invalid reply still ends the pass. `--max-output-tokens N` optionally
 caps output for a local run and is recorded in the manifest. Omit it to
-keep Tufa's output budget.
+keep Tufa`s output budget.
+
+The runner ends a pass with a `no_game_progress` error after 16 model calls
+or five minutes without an accepted move. Set the call limit with
+`--accepted-move-cap N`. Transport retries count toward the limit, and
+automatic resets carry the same budget forward. Preflight gets its own
+watchdog budget and finishes once it validates a playable action.
 
 The console and `log.txt` show a formatted line for each finished game
 pass and the same summary table as the other ARC evaluator. The run also

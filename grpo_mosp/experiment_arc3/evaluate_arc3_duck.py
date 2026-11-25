@@ -30,6 +30,7 @@ from ..experiment_downstream_tasks.serve_qwen import DEADLINE_HEADER, REASONING_
 from ..run_artifacts import artifact_environment, console_log
 from .duck.adapter import load_duck
 from .duck.install import REVISION, UPSTREAM, runner_installed
+from .duck.move_budget import ACCEPTED_MOVE_TIMEOUT, DEFAULT_ACCEPTED_MOVE_CAP, AcceptedMoveBudget
 from .duck.vllm_backend import serve_vllm, vllm_post
 from .evaluate_arc3 import (
     DIFFICULTIES, REPO, load_difficulties, new_run, print_game, select_games,
@@ -93,7 +94,8 @@ class ModelClient:
 
     def __init__(self, endpoint, config, *, deadline=False, max_output_tokens=None,
                  reasoning_effort=DEFAULT_REASONING_EFFORT, generation_timeout=GENERATION_TIMEOUT,
-                 request_timeout=REQUEST_TIMEOUT, model="qwen-frozen", family="qwen", post=vllm_post):
+                 request_timeout=REQUEST_TIMEOUT, model="qwen-frozen", family="qwen", post=vllm_post,
+                 accepted_move_cap=DEFAULT_ACCEPTED_MOVE_CAP):
         self.url = endpoint + "/chat/completions"
         self.model = model
         self.family = family
@@ -105,6 +107,7 @@ class ModelClient:
         self.generation_timeout = generation_timeout
         self.request_timeout = request_timeout
         self.model_calls = 0
+        self.move_budget = AcceptedMoveBudget(accepted_move_cap)
         self.generated_tokens = 0
         self.inference_seconds = 0.0
 
@@ -140,7 +143,9 @@ class ModelClient:
                 raise InferenceFailure("decision_budget_expired: no time left for a transport retry",
                                        budget_limited=True)
             generation_seconds = min(self.generation_timeout, timeout - min(response_margin, timeout / 2))
-            deadline = started + generation_seconds
+            self.move_budget.begin_call()
+            deadline = min(started + generation_seconds, self.move_budget.deadline)
+            timeout = min(timeout, self.move_budget.deadline - started)
             tokens = 0
             reason = "transport_error"
             transport_error = None
@@ -155,12 +160,14 @@ class ModelClient:
                 if not response.ok:
                     error = reply.get("error", {})
                     reason = error.get("code") or f"http_{response.status_code}"
+                    self.move_budget.check_time()
                     raise InferenceFailure(
                         f"{reason}: {error.get('message', response.reason)}",
                         budget_limited=reason == "generation_deadline" and generation_seconds < self.generation_timeout,
                     )
                 choice = reply["choices"][0]
                 reason = choice["finish_reason"]
+                self.move_budget.check_time()
                 if extract is None:
                     return reply
                 try:
@@ -170,6 +177,7 @@ class ModelClient:
                     raise InferenceFailure(f"{reason}: {error}") from error
             except (requests.ConnectionError, requests.Timeout) as error:
                 transport_error = str(error)
+                self.move_budget.check_time()
                 if attempt == 2:
                     raise InferenceFailure(f"{reason}: two attempts failed: {error}") from error
             except (ValueError, KeyError, TypeError, AttributeError) as error:
@@ -195,14 +203,17 @@ class ModelClient:
         timeout = self.request_timeout
         if request_timeout_seconds is not None:
             timeout = min(timeout, request_timeout_seconds)
-        self.model_calls += 1
+        self.move_budget.begin_call()
         started = time.monotonic()
+        timeout = min(timeout, max(0.0, self.move_budget.deadline - started))
+        self.model_calls += 1
         try:
             response = self.post(self.url, json=payload, timeout=timeout)
             if response.status_code in {429, 502, 503, 504}:
                 response.raise_for_status()
         finally:
             self.inference_seconds += time.monotonic() - started
+            self.move_budget.check_time()
         if not response.ok:
             raise InferenceFailure(f"http_{response.status_code}: {response.text}")
         reply = response.json()
@@ -215,6 +226,9 @@ class DirectAnalyzer(ModelClient):
 
     model_actions = 0
     previous_error = ""
+
+    def refresh_after_reset(self, _state_path, _payload):
+        self.previous_error = ""
 
     def make_request(self, frame, history, action_num, valid_actions):
         from inference.agent.action_names import to_engine_action, to_model_action
@@ -411,7 +425,8 @@ def policy_analyzer(args, config, endpoint, condition, *, record=None):
     client_type = DirectAnalyzer if condition.harness == "none" else ModelClient
     client = client_type(endpoint, config, deadline=args.deadline, max_output_tokens=args.max_output_tokens,
                          reasoning_effort=condition.reasoning_effort, generation_timeout=args.generation_timeout,
-                         request_timeout=args.request_timeout, model=condition.model, family=condition.family)
+                         request_timeout=args.request_timeout, model=condition.model, family=condition.family,
+                         accepted_move_cap=args.accepted_move_cap)
     if condition.harness == "none":
         return client
     from .duck.native_policy import NativeDuckAnalyzer
@@ -423,6 +438,7 @@ def preflight_duck(analyzer, frame, valid_actions, run_dir, ends_at):
     from inference.agent.action_names import to_engine_action, to_model_action
     from inference.agent.runtime_state import HistoryEntry, RUNTIME_STATE_FILENAME, write_runtime_state
 
+    ends_at = min(ends_at, analyzer.move_budget.deadline)
     state_path = run_dir / "preflight_artifacts" / RUNTIME_STATE_FILENAME
     write_runtime_state(state_path, current_frame=frame, history=[HistoryEntry("", frame)])
     available = [to_model_action(name) for name in valid_actions if to_engine_action(name)]
@@ -446,6 +462,7 @@ def preflight_duck(analyzer, frame, valid_actions, run_dir, ends_at):
         should_stop=lambda: time.monotonic() >= ends_at,
     )
     if move is None:
+        analyzer.move_budget.check()
         raise InferenceFailure("preflight_no_action: Duck tool policy proposed no playable action")
     return move
 
@@ -715,6 +732,9 @@ def main():
                         help="Wall-clock budget per level attempt (default: %(default)s).")
     parser.add_argument("--bounded-recovery", type=nonnegative_int, default=2, metavar="N",
                         help="Maximum retries per level after timeout or game over (default: %(default)s).")
+    parser.add_argument("--accepted-move-cap", type=positive_int, default=DEFAULT_ACCEPTED_MOVE_CAP, metavar="N",
+                        help="Maximum model calls without an accepted move (default: %(default)s). "
+                             "A no-move interval is also limited to five minutes.")
     parser.add_argument("--preflight-timeout", type=positive_int, default=PREFLIGHT_TIMEOUT, metavar="SECONDS",
                         help="Total preflight budget per game and condition with --deadline (default: %(default)s).")
     parser.add_argument("--max-output-tokens", type=positive_int, metavar="N",
@@ -847,6 +867,8 @@ def main():
             "request_timeout_seconds": args.request_timeout,
             "level_timeout_seconds": args.game_timeout,
             "bounded_recovery_per_level": args.bounded_recovery,
+            "accepted_move_cap": args.accepted_move_cap,
+            "accepted_move_timeout_seconds": ACCEPTED_MOVE_TIMEOUT,
             "deadline": {
                 "enabled": args.deadline,
                 "server_timeout_seconds": args.generation_timeout if args.deadline else None,
