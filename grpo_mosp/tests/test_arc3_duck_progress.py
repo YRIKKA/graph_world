@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import time
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -28,6 +29,15 @@ def duck(monkeypatch):
         config=config, policy=native_policy.NativeDuckAnalyzer, solver=level_budget.LevelBudgetSolver,
         tool_agent=tool_agent, engine=arcengine,
     )
+
+
+@pytest.fixture
+def tool_clock(duck, monkeypatch):
+    clock = SimpleNamespace(now=0.0)
+    monkeypatch.setattr(duck.tool_agent, "time", SimpleNamespace(
+        monotonic=lambda: clock.now, strftime=time.strftime,
+    ))
+    return clock
 
 
 def tool_exchange(call_id, content, code="print(current_frame.step)"):
@@ -124,6 +134,59 @@ def test_watchdog_finishes_stalled_pass_and_runs_next_game(duck, monkeypatch, tm
     assert "TOOL RESULT" in (tmp_path / "transcripts/first_p0.txt").read_text()
     assert second.game_run.state == "won"
     assert next_client.move_budget.calls == 0
+
+
+@pytest.mark.parametrize("yield_seconds", [None, evaluation.DUCK_GAMEPLAY_YIELD_SECONDS])
+def test_gameplay_yield_keeps_the_same_step_and_watchdog(duck, tool_clock, monkeypatch, tmp_path, yield_seconds):
+    monkeypatch.setattr(duck.tool_agent, "run_sandboxed_python", sandbox)
+    duck.config["analyzer"]["tool_steps"] = 0
+    reply = tool_reply("inspect")
+
+    def post(*args, **kwargs):
+        tool_clock.now += 61.0
+        return reply
+
+    client = evaluation.ModelClient("http://unused", duck.config, post=post, accepted_move_cap=3)
+    analyzer = duck.policy(client, "http://unused", yield_seconds=yield_seconds)
+    game = OfflineGame(duck.engine, "yield-test")
+
+    run_games(duck, tmp_path, [game], [analyzer])
+
+    transcript = (tmp_path / "transcripts/yield-test_p0.txt").read_text()
+    assert transcript.count("--- analysis_step=1 | action=1 |") == (3 if yield_seconds else 1)
+    assert transcript.count("Yielded control to solver: turn_time_budget.") == (3 if yield_seconds else 0)
+    assert "no_game_progress: 3 model calls" in game.game_run.solver_note
+    assert client.model_calls == 3
+
+
+def test_preflight_has_no_cooperative_yield(duck, tool_clock, monkeypatch, tmp_path):
+    from inference.agent.runtime_state import Frame
+
+    monkeypatch.setattr(duck.tool_agent, "_LOCAL_ANALYZER_YIELD_SECONDS", 60)
+    monkeypatch.setattr(duck.tool_agent, "run_sandboxed_python", sandbox)
+    duck.config["analyzer"]["tool_steps"] = 0
+    args = SimpleNamespace(
+        deadline=True, max_output_tokens=None, generation_timeout=230, request_timeout=240, accepted_move_cap=16,
+        duck_yield_seconds=evaluation.DUCK_GAMEPLAY_YIELD_SECONDS,
+    )
+    analyzer = evaluation.policy_analyzer(
+        args, duck.config, "http://unused", evaluation.Condition("qwen-frozen", "duck", "medium"),
+    )
+    replies = iter([tool_reply("inspect"), tool_reply("act")])
+
+    def post(*args, **kwargs):
+        tool_clock.now += 61.0
+        return next(replies)
+
+    analyzer.client.post = post
+    move = evaluation.preflight_duck(
+        analyzer, Frame(((0,),), 0, 1), ["ACTION1"], tmp_path, time.monotonic() + 300,
+    )
+
+    assert move == {"action": "UP"}
+    assert analyzer.model_calls == 2
+    transcript = (tmp_path / "preflight_artifacts/transcript.txt").read_text()
+    assert "yield_seconds: disabled" in transcript
 
 
 def test_transport_retry_counts_toward_cap():

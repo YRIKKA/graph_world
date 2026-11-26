@@ -153,13 +153,17 @@ Game over and level-time exhaustion use this allowance. Each retry
 restores the current level and gives it a fresh level budget. A standalone
 request deadline or invalid reply still ends the pass. `--max-output-tokens N` optionally
 caps output for a local run and is recorded in the manifest. Omit it to
-keep Tufa`s output budget.
+keep Tufa's output budget.
 
 The runner ends a pass with a `no_game_progress` error after 16 model calls
 or five minutes without an accepted move. Set the call limit with
 `--accepted-move-cap N`. Transport retries count toward the limit, and
 automatic resets carry the same budget forward. Preflight gets its own
 watchdog budget and finishes once it validates a playable action.
+
+Duck gameplay uses a 60-second cooperative yield by default. The solver
+resumes the same analysis step after a yield. Use `--no-yield` to disable
+it. Preflight runs without cooperative yielding.
 
 The console and `log.txt` show a formatted line for each finished game
 pass and the same summary table as the other ARC evaluator. The run also

@@ -47,6 +47,7 @@ GENERATION_TIMEOUT = 230
 REQUEST_TIMEOUT = 240
 GAME_TIMEOUT = 2 * 60 * 60
 PREFLIGHT_TIMEOUT = 600
+DUCK_GAMEPLAY_YIELD_SECONDS = 60
 DEFAULT_REASONING_EFFORT = "medium"
 INKLING_MODEL = "thinkingmachines/Inkling-2-Mini"
 INKLING_REVISION = "c9d028302cd0f035fdf8e7e91f089a4ce94d2195"
@@ -421,7 +422,7 @@ def check_game_availability(args, selected, eligible, run_dir):
     return games
 
 
-def policy_analyzer(args, config, endpoint, condition, *, record=None):
+def policy_analyzer(args, config, endpoint, condition, *, record=None, yield_seconds=None):
     client_type = DirectAnalyzer if condition.harness == "none" else ModelClient
     client = client_type(endpoint, config, deadline=args.deadline, max_output_tokens=args.max_output_tokens,
                          reasoning_effort=condition.reasoning_effort, generation_timeout=args.generation_timeout,
@@ -431,7 +432,7 @@ def policy_analyzer(args, config, endpoint, condition, *, record=None):
         return client
     from .duck.native_policy import NativeDuckAnalyzer
 
-    return NativeDuckAnalyzer(client, endpoint, record=record)
+    return NativeDuckAnalyzer(client, endpoint, record=record, yield_seconds=yield_seconds)
 
 
 def preflight_duck(analyzer, frame, valid_actions, run_dir, ends_at):
@@ -545,7 +546,7 @@ def run_benchmark(config, args, games, run_dir, endpoint, condition):
             if error := preflight_errors[game_id]:
                 raise InferenceFailure(error)
         game.open_for_play()
-        analyzer = policy_analyzer(args, config, endpoint, condition)
+        analyzer = policy_analyzer(args, config, endpoint, condition, yield_seconds=args.duck_yield_seconds)
         return analyzer
 
     arcade = make_arcade_spec(args, run_dir)
@@ -722,6 +723,9 @@ def main():
     parser.add_argument("--concurrent-jobs", type=positive_int, help="Override Tufa's configured worker count.")
     parser.add_argument("--reasoning-effort", action="append", nargs="+", choices=(*REASONING_EFFORTS, "easy"),
                         help=f"Model reasoning levels (default: {DEFAULT_REASONING_EFFORT}). 'easy' is an alias for 'low'.")
+    parser.add_argument("--yield", action=argparse.BooleanOptionalAction, default=True,
+                        help=f"Enable the {DUCK_GAMEPLAY_YIELD_SECONDS}-second cooperative yield during "
+                             "Duck gameplay (enabled by default).")
     parser.add_argument("--deadline", action="store_true",
                         help="Require a preflight action and enforce the local generation deadline.")
     parser.add_argument("--generation-timeout", type=positive_int, default=GENERATION_TIMEOUT, metavar="SECONDS",
@@ -839,6 +843,9 @@ def main():
     multiple_conditions = len(condition_dirs) > 1
     with artifact_environment(run_dir):
         print_cli_options(args, file=sys.stdout)
+        args.duck_yield_seconds = (
+            DUCK_GAMEPLAY_YIELD_SECONDS if vars(args)["yield"] and "duck" in args.harness else None
+        )
         games = check_game_availability(args, game_ids, eligible, run_dir)
         if not games:
             raise RuntimeError(f"No selected or replacement games could be opened. See {run_dir / 'log.txt'}")
@@ -869,6 +876,7 @@ def main():
             "bounded_recovery_per_level": args.bounded_recovery,
             "accepted_move_cap": args.accepted_move_cap,
             "accepted_move_timeout_seconds": ACCEPTED_MOVE_TIMEOUT,
+            "duck_yield_seconds": args.duck_yield_seconds,
             "deadline": {
                 "enabled": args.deadline,
                 "server_timeout_seconds": args.generation_timeout if args.deadline else None,

@@ -7,7 +7,7 @@ from inference.agent import tool_agent
 
 
 class NativeDuckAnalyzer(tool_agent.ToolAgent):
-    def __init__(self, client, endpoint, *, record=None):
+    def __init__(self, client, endpoint, *, record=None, yield_seconds=None):
         settings = client.config["analyzer"]
         super().__init__(model=getattr(client, "model", "base"), base_url=endpoint, provider="vllm", api_key="local",
                          timeout=0, save_request_logs=settings["save_request_logs"])
@@ -24,6 +24,7 @@ class NativeDuckAnalyzer(tool_agent.ToolAgent):
             1024, client.config["shared"]["context_window"]
             - self._reply_reserve_tokens - self._request_safety_margin_tokens,
         )
+        self._yield_seconds = yield_seconds
         self._tool_steps = settings["tool_steps"] or None
         self._python_timeout = settings["tool_timeout"]
         self._tool_output_tokens = settings["tool_output_tokens"]
